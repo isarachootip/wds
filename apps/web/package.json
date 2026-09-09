@@ -1,0 +1,32 @@
+{
+  "name": "@wds/web",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "React 18 + Vite + Ant Design 5 Frontend Portal for Thai Watsadu WDS",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.3.6",
+    "@wds/shared-types": "workspace:*",
+    "antd": "^5.16.2",
+    "decimal.js": "^10.4.3",
+    "lucide-react": "^0.368.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.8"
+  }
+}

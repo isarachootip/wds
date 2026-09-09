@@ -1,0 +1,17 @@
+{
+  "name": "@wds/shared-types",
+  "version": "1.0.0",
+  "description": "Shared domain types, DTOs and contracts for Thai Watsadu WDS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "decimal.js": "^10.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

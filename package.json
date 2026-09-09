@@ -1,0 +1,22 @@
+{
+  "name": "thai-watsadu-wds-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Thai Watsadu Wholesale & Direct Sales (WDS) Enterprise Monorepo",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev:api": "pnpm --filter @wds/api dev",
+    "dev:web": "pnpm --filter @wds/web dev",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:cov": "pnpm -r test:cov",
+    "prepare": "husky || true"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "husky": "^9.0.11",
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
