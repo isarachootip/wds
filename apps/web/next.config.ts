@@ -4,7 +4,12 @@ const isDev = process.env.NODE_ENV === 'development'
 
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' https://static.line-scdn.net https://cdn.jsdelivr.net" + (isDev ? " 'unsafe-eval'" : ""),
+  // Next.js 15 requires 'unsafe-inline' for hydration scripts (inline event handlers & __NEXT_DATA__).
+  // In production, browsers that support 'strict-dynamic' will ignore 'unsafe-inline', keeping security;
+  // older browsers fall back to 'unsafe-inline'.
+  "script-src 'self' 'unsafe-inline'"
+    + (isDev ? " 'unsafe-eval'" : "")
+    + " https://static.line-scdn.net https://cdn.jsdelivr.net",
   "style-src 'self' 'unsafe-inline'",       // Tailwind generates inline styles
   "img-src 'self' data: blob: https://*.supabase.co https://profile.line-scdn.net",
   "font-src 'self' data:",

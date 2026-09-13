@@ -47,12 +47,13 @@ RUN apk add --no-cache curl libc6-compat
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy standalone output
+# Copy standalone output (includes server.js + node_modules for SSR)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+# Static assets: Next.js standalone serves /_next/static from .next/static (relative to server.js location)
+# server.js is at /app/apps/web/server.js, so static must be at /app/apps/web/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-
-# Ensure public dir exists
-RUN mkdir -p ./apps/web/public && chown -R nextjs:nodejs ./apps/web/public
+# Public assets: must be at apps/web/public relative to WORKDIR
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 
