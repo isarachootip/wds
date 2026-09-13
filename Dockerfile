@@ -1,7 +1,7 @@
 FROM node:22-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN npm install -g pnpm@9.0.0
 RUN apk add --no-cache libc6-compat
 
 # 1. Install dependencies
@@ -10,6 +10,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/web/package.json ./apps/web/
+COPY apps/api/package.json ./apps/api/
 COPY packages/db/package.json ./packages/db/
 COPY packages/db-schema/package.json ./packages/db-schema/
 COPY packages/shared-types/package.json ./packages/shared-types/
@@ -49,11 +50,12 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy standalone output (includes server.js + node_modules for SSR)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-# Static assets: Next.js standalone serves /_next/static from .next/static (relative to server.js location)
-# server.js is at /app/apps/web/server.js, so static must be at /app/apps/web/.next/static
+# Static assets: Next.js standalone serves /_next/static from .next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-# Public assets: must be at apps/web/public relative to WORKDIR
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+# Public assets
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
 
 USER nextjs
 
