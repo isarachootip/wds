@@ -1,8 +1,9 @@
 'use client'
+
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-
+import { ShieldCheck, UserCheck, Wrench, Lock, Mail, ArrowRight, Sparkles } from 'lucide-react'
 import { loginStandalone } from './actions'
 
 export default function LoginPage() {
@@ -14,8 +15,8 @@ export default function LoginPage() {
 
   const isConfigured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
-    !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder.supabase.co')
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder.supabase.co')
   )
 
   async function handleLogin(e: React.FormEvent) {
@@ -46,83 +47,127 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-slate-800">
-            WDS เข้าสู่ระบบ
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">Thai Watsadu Wholesale & Direct Sales</p>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background text-foreground relative overflow-hidden">
+      {/* Background Subtle Gradient Blobs */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Artifact Style Auth Card */}
+        <div className="bg-card border border-border/80 p-8 rounded-2xl shadow-xl space-y-6">
+          {/* Brand Header */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-red-600 text-white font-black text-xl shadow-md shadow-red-600/20 mb-1">
+              TW
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              เข้าสู่ระบบ WDS Platform
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Thai Watsadu Wholesale & Direct Sales Enterprise
+            </p>
+          </div>
+
+          {!isConfigured && (
+            <div className="p-3.5 bg-primary/5 border border-primary/20 text-foreground text-xs rounded-xl flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-primary">โหมด Standalone VPS:</span>
+                <p className="text-muted-foreground mt-0.5">
+                  เลือกบทบาทด้านล่างเพื่อเข้าทดสอบระบบได้ทันทีโดยไม่ต้องระบุรหัสผ่าน
+                </p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-foreground">อีเมลพนักงาน</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required={isConfigured}
+                  className="w-full pl-10 pr-3.5 py-2 text-sm bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                  placeholder="name@thaiwatsadu.com"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-foreground">รหัสผ่าน</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-muted-foreground absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required={isConfigured}
+                  className="w-full pl-10 pr-3.5 py-2 text-sm bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-xs font-medium text-rose-600 bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50 shadow-xs transition-all"
+            >
+              <span>{loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}</span>
+              {!loading && <ArrowRight className="w-4 h-4" />}
+            </button>
+          </form>
+
+          {!isConfigured && (
+            <div className="pt-5 border-t border-border/60 space-y-2.5">
+              <p className="text-xs text-center font-medium text-muted-foreground">
+                เข้าสู่ระบบด่วนตามบทบาท (Quick Access)
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => loginStandalone('admin')}
+                  className="flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/80 hover:border-border text-foreground transition-all shadow-xs group text-left"
+                >
+                  <ShieldCheck className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-semibold truncate">Admin</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loginStandalone('sales')}
+                  className="flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/80 hover:border-border text-foreground transition-all shadow-xs group text-left"
+                >
+                  <UserCheck className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-semibold truncate">Sales / AE</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loginStandalone('technician')}
+                  className="flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-xl border border-border bg-card hover:bg-muted/80 hover:border-border text-foreground transition-all shadow-xs group text-left"
+                >
+                  <Wrench className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                  <span className="text-[11px] font-semibold truncate">ช่างหน้างาน</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {!isConfigured && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md">
-            ℹ️ โหมด <strong>Standalone (Coolify VPS)</strong>: สามารถกดเข้าสู่ระบบเพื่อใช้งานระบบได้ทันที
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">อีเมล</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required={isConfigured}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-              placeholder="admin@thaiwatsadu.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required={isConfigured}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
-              placeholder="••••••••"
-            />
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium"
-          >
-            {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
-          </button>
-        </form>
-
-        {!isConfigured && (
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <p className="text-xs text-slate-500 mb-2 text-center font-medium">เข้าสู่ระบบด่วนตามบทบาท (Quick Access)</p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => loginStandalone('admin')}
-                className="px-2 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium"
-              >
-                👑 Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => loginStandalone('sales')}
-                className="px-2 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium"
-              >
-                💼 Sales
-              </button>
-              <button
-                type="button"
-                onClick={() => loginStandalone('technician')}
-                className="px-2 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded text-slate-700 font-medium"
-              >
-                🔧 ช่างหน้างาน
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Footer info */}
+        <p className="text-center text-[11px] text-muted-foreground mt-6">
+          © {new Date().getFullYear()} Thai Watsadu Co., Ltd. Central Retail Corporation
+        </p>
       </div>
     </div>
   )
 }
+

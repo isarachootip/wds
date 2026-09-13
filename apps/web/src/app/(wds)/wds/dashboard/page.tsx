@@ -1,39 +1,41 @@
 import { unstable_noStore as noStore } from 'next/cache'
 import Link from 'next/link'
+import {
+  Users,
+  PhoneCall,
+  MapPin,
+  FileText,
+  CreditCard,
+  Truck,
+  BarChart3,
+  Calendar,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  ArrowRight,
+  TrendingUp,
+  Plus,
+} from 'lucide-react'
 import { satangToBaht } from '@/lib/qt-calc'
 import { getDashboardAlerts } from '@/lib/dashboard-metrics'
+import { ArtifactKpiCard } from '@/components/ui/ArtifactKpiCard'
 
 async function fetchMetrics() {
   try {
     const { getDashboardToday } = await import('@/modules/reports/queries')
     return await getDashboardToday()
-  } catch { return null }
+  } catch {
+    return null
+  }
 }
 
 async function fetchFunnel() {
   try {
     const { getFunnelReport } = await import('@/modules/reports/queries')
     return await getFunnelReport()
-  } catch { return null }
-}
-
-type KpiCardProps = {
-  label: string; value: string | number; sub?: string
-  href?: string; alert?: boolean; warning?: boolean
-}
-
-function KpiCard({ label, value, sub, href, alert, warning }: KpiCardProps) {
-  const bg = alert ? 'bg-red-50 border-red-200' : warning ? 'bg-yellow-50 border-yellow-200' : 'bg-white border-gray-200'
-  const valueColor = alert ? 'text-red-600' : warning ? 'text-yellow-700' : 'text-gray-900'
-  const content = (
-    <div className={`rounded-xl border p-4 ${bg}`}>
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${valueColor}`}>{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
-    </div>
-  )
-  if (href) return <Link href={href}>{content}</Link>
-  return content
+  } catch {
+    return null
+  }
 }
 
 export default async function DashboardPage() {
@@ -42,102 +44,215 @@ export default async function DashboardPage() {
   const alerts = metrics ? getDashboardAlerts(metrics) : []
 
   const today = new Date().toLocaleDateString('th-TH', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   })
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Top Banner / Welcome Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border/60">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{today}</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            ภาพรวมงานขาย & ปฏิบัติการ
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{today}</span>
+            <span className="inline-block w-1 h-1 rounded-full bg-muted-foreground/40" />
+            <span>Thai Watsadu Wholesale & Direct Sales</span>
+          </p>
         </div>
-        <Link href="/wds/reports" className="text-sm text-blue-600 hover:underline">รายงานทั้งหมด →</Link>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href="/wds/leads/new"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium text-foreground transition-colors shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5 text-primary" />
+            <span>เพิ่มลีด</span>
+          </Link>
+          <Link
+            href="/wds/quotations/new"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-xs font-medium text-primary-foreground transition-colors shadow-xs"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>สร้างใบเสนอราคา</span>
+          </Link>
+        </div>
       </div>
 
-      {/* Alerts */}
+      {/* Critical Alerts Banner */}
       {alerts.length > 0 && (
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2">
           {alerts.map((a, i) => (
-            <div key={i} className={`px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2
-              ${a.kind === 'danger' ? 'bg-red-50 text-red-700 border border-red-200'
-                : a.kind === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
-              <span>{a.kind === 'danger' ? '🔴' : a.kind === 'warning' ? '⚠️' : 'ℹ️'}</span>
-              {a.message}
+            <div
+              key={i}
+              className={`p-3.5 rounded-xl text-xs sm:text-sm font-medium flex items-center justify-between gap-3 border shadow-xs transition-all ${
+                a.kind === 'danger'
+                  ? 'bg-rose-500/10 text-rose-700 border-rose-500/20 dark:text-rose-400'
+                  : a.kind === 'warning'
+                  ? 'bg-amber-500/10 text-amber-700 border-amber-500/20 dark:text-amber-400'
+                  : 'bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                {a.kind === 'danger' ? (
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                ) : a.kind === 'warning' ? (
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <Info className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
+                )}
+                <span className="truncate">{a.message}</span>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* KPI Grid */}
+      {/* Modern KPI Cards Grid */}
       {metrics ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <KpiCard
-            label="Lead ใหม่วันนี้" value={metrics.new_leads_today}
-            href="/wds/leads" />
-          <KpiCard
-            label="Follow-up ค้าง" value={metrics.overdue_followups}
-            href="/wds/followups" alert={metrics.overdue_followups > 0} />
-          <KpiCard
-            label="Site Visit รอ" value={metrics.pending_site_visits}
-            href="/wds/appointments" warning={metrics.pending_site_visits > 0} />
-          <KpiCard
-            label="นัดรออนุมัติ" value={metrics.pending_appointments}
-            href="/wds/appointments" warning={metrics.pending_appointments > 0} />
-          <KpiCard
-            label="QT รอตอบ" value={metrics.pending_quotations}
-            href="/wds/quotations" />
-          <KpiCard
-            label="สลิปรอตรวจ" value={metrics.pending_payments_count}
-            sub={metrics.pending_payments_count > 0 ? `฿${satangToBaht(metrics.pending_payments_satang)}` : undefined}
-            href="/wds/payments" warning={metrics.pending_payments_count > 0} />
-          <KpiCard
-            label="ของรอส่ง" value={metrics.pending_deliveries}
-            href="/wds/deliveries" />
-          <KpiCard
-            label="รายงาน" value="→"
-            href="/wds/reports" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <ArtifactKpiCard
+            label="Lead ใหม่วันนี้"
+            value={metrics.new_leads_today}
+            sub="ลีดจากทุกช่องทาง"
+            icon={<Users className="w-4 h-4" />}
+            href="/wds/leads"
+            variant="default"
+          />
+          <ArtifactKpiCard
+            label="Follow-up ค้างติดต่อ"
+            value={metrics.overdue_followups}
+            sub={metrics.overdue_followups > 0 ? 'เกินกำหนดแล้ว' : 'ติดต่อครบถ้วน'}
+            icon={<PhoneCall className="w-4 h-4" />}
+            href="/wds/followups"
+            variant={metrics.overdue_followups > 0 ? 'alert' : 'default'}
+          />
+          <ArtifactKpiCard
+            label="Site Visit รอช่างสำรวจ"
+            value={metrics.pending_site_visits}
+            sub="นัดหมายเตรียมเข้างาน"
+            icon={<MapPin className="w-4 h-4" />}
+            href="/wds/appointments"
+            variant={metrics.pending_site_visits > 0 ? 'warning' : 'default'}
+          />
+          <ArtifactKpiCard
+            label="QT รอลูกค้าตอบรับ"
+            value={metrics.pending_quotations}
+            sub="รอตรวจทานและยืนยัน"
+            icon={<FileText className="w-4 h-4" />}
+            href="/wds/quotations"
+            variant="default"
+          />
+          <ArtifactKpiCard
+            label="สลิปรอตรวจสอบยอด"
+            value={metrics.pending_payments_count}
+            sub={
+              metrics.pending_payments_count > 0
+                ? `รวม ฿${satangToBaht(metrics.pending_payments_satang)}`
+                : 'ตรวจสอบครบทุกสลิป'
+            }
+            icon={<CreditCard className="w-4 h-4" />}
+            href="/wds/payments"
+            variant={metrics.pending_payments_count > 0 ? 'warning' : 'default'}
+          />
+          <ArtifactKpiCard
+            label="สินค้าคิวรอจัดส่ง"
+            value={metrics.pending_deliveries}
+            sub="รอขนส่งกระจายสินค้า"
+            icon={<Truck className="w-4 h-4" />}
+            href="/wds/deliveries"
+            variant="default"
+          />
+          <ArtifactKpiCard
+            label="Credit Dual-Control"
+            value="ตรวจวงเงิน"
+            sub="Dual-sign สำหรับวงเงิน B2B"
+            icon={<TrendingUp className="w-4 h-4" />}
+            href="/wds/credit"
+            variant="default"
+          />
+          <ArtifactKpiCard
+            label="รายงานสรุปทั้งหมด"
+            value="ดูสถิติ"
+            sub="AR Aging, Funnel, Channels"
+            icon={<BarChart3 className="w-4 h-4" />}
+            href="/wds/reports"
+            variant="default"
+          />
         </div>
       ) : (
-        <p className="text-gray-400 text-sm mb-8">ไม่สามารถโหลด KPI ได้</p>
+        <div className="p-8 rounded-xl border border-border bg-card text-center text-sm text-muted-foreground">
+          ไม่สามารถโหลดข้อมูลสถิติ KPI ประจำวันได้
+        </div>
       )}
 
-      {/* Funnel */}
+      {/* Cruip Artifact Style Conversion Funnel */}
       {funnel && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="font-semibold text-gray-900 mb-4">Conversion Funnel</h2>
-          <div className="space-y-3">
+        <div className="p-5 sm:p-6 rounded-xl border border-border bg-card shadow-xs space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <h2 className="text-base font-semibold text-foreground tracking-tight">
+                Conversion Funnel & Sales Velocity
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                สถิติการแปลงสภาพจาก Lead จนถึงการชำระเงินสำเร็จ
+              </p>
+            </div>
+            <Link
+              href="/wds/reports/funnel"
+              className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+            >
+              <span>รายงานฉบับเต็ม</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="space-y-4 pt-2">
             {[
-              { label: 'Leads', count: funnel.total_leads, rate: null, avgDays: null, href: '/wds/leads' },
-              { label: 'Site Visit', count: funnel.sv_count, rate: funnel.sv_rate_pct, avgDays: funnel.sv_avg_days, href: '/wds/appointments' },
-              { label: 'Quotation', count: funnel.qt_count, rate: funnel.qt_rate_pct, avgDays: funnel.qt_avg_days, href: '/wds/quotations' },
-              { label: 'Order', count: funnel.order_count, rate: funnel.order_rate_pct, avgDays: null, href: '/wds/orders' },
-              { label: 'ชำระแล้ว', count: funnel.paid_count, rate: funnel.paid_rate_pct, avgDays: null, href: '/wds/orders?status=paid' },
+              { label: 'Leads ทั้งหมด', count: funnel.total_leads, rate: null, avgDays: null, href: '/wds/leads' },
+              { label: 'สำรวจหน้างาน (Site Visit)', count: funnel.sv_count, rate: funnel.sv_rate_pct, avgDays: funnel.sv_avg_days, href: '/wds/appointments' },
+              { label: 'ออกใบเสนอราคา (Quotation)', count: funnel.qt_count, rate: funnel.qt_rate_pct, avgDays: funnel.qt_avg_days, href: '/wds/quotations' },
+              { label: 'แปลงเป็นคำสั่งซื้อ (Order)', count: funnel.order_count, rate: funnel.order_rate_pct, avgDays: null, href: '/wds/orders' },
+              { label: 'ชำระเงินเรียบร้อย (Paid)', count: funnel.paid_count, rate: funnel.paid_rate_pct, avgDays: null, href: '/wds/orders?status=paid' },
             ].map((step, i) => {
-              const widthPct = funnel.total_leads > 0
-                ? Math.round((step.count / funnel.total_leads) * 100)
-                : 0
+              const widthPct =
+                funnel.total_leads > 0
+                  ? Math.max(4, Math.round((step.count / funnel.total_leads) * 100))
+                  : 0
               return (
-                <div key={i}>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center justify-center font-bold shrink-0">{i + 1}</span>
-                      <Link href={step.href} className="font-medium text-gray-900 hover:text-blue-600">{step.label}</Link>
+                <div key={i} className="group">
+                  <div className="flex items-center justify-between text-xs sm:text-sm mb-1.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[11px] font-bold flex items-center justify-center shrink-0">
+                        {i + 1}
+                      </span>
+                      <Link
+                        href={step.href}
+                        className="font-medium text-foreground group-hover:text-primary transition-colors truncate"
+                      >
+                        {step.label}
+                      </Link>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
+
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       {step.avgDays !== null && step.avgDays > 0 && (
-                        <span>⏱ {step.avgDays} วัน</span>
+                        <span className="hidden sm:inline">⏱ เฉลี่ย {step.avgDays} วัน</span>
                       )}
                       {step.rate !== null && (
-                        <span className="text-blue-600 font-medium">{step.rate}%</span>
+                        <span className="font-semibold text-primary">{step.rate}%</span>
                       )}
-                      <span className="font-bold text-gray-900 text-sm">{step.count}</span>
+                      <span className="font-bold text-foreground sm:text-sm">{step.count} รายการ</span>
                     </div>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+
+                  <div className="h-2 w-full bg-muted/60 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-500 rounded-full transition-all"
+                      className="h-full bg-primary rounded-full transition-all duration-500 ease-out group-hover:bg-primary/80"
                       style={{ width: `${widthPct}%` }}
                     />
                   </div>
