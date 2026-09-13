@@ -43,3 +43,47 @@ INSERT INTO public.products (sku, name, name_en, unit, base_price_satang, catego
   ('P014', 'ฉนวนกันความร้อนแผ่น 2 นิ้ว ขนาด 1.2x2.4 ม.', 'Thermal Insulation Board 2inch 1.2x2.4m', 'แผ่น', 35000, 'ฉนวน', 'K-FLEX', 'active'),
   ('P015', 'ซิลิโคนกันน้ำ GE ขนาด 280 มล.', 'GE Waterproof Silicone Sealant 280ml', 'หลอด', 8900, 'กาว/ซิลิโคน', 'GE', 'active')
 ON CONFLICT (sku) DO NOTHING;
+
+-- Seed Leads
+INSERT INTO public.leads (customer_id, source, channel_ref, status, score, interest, budget_range_min_satang, budget_range_max_satang)
+SELECT id, 'line', '@line_sukhumvit71', 'new', 85, '{"description": "โครงการทาวน์โฮม 8 ยูนิต สุขุมวิท 71"}'::jsonb, 50000000, 120000000
+FROM public.customers WHERE code = 'C001'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.leads (customer_id, source, channel_ref, status, score, interest, budget_range_min_satang, budget_range_max_satang)
+SELECT id, 'store', 'BR-BANGNA-01', 'site_visit_requested', 95, '{"description": "ปรับปรุงหลังคาโรงงานและฉนวนกันความร้อน 2,400 ตร.ม."}'::jsonb, 30000000, 60000000
+FROM public.customers WHERE code = 'C002'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.leads (customer_id, source, channel_ref, status, score, interest, budget_range_min_satang, budget_range_max_satang)
+SELECT id, 'phone', '081-987-6543', 'quoted', 90, '{"description": "งานโครงสร้างอาคารพาณิชย์ 4 ชั้น ราชพฤกษ์"}'::jsonb, 80000000, 150000000
+FROM public.customers WHERE code = 'C003'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO public.leads (customer_id, source, channel_ref, status, score, interest, budget_range_min_satang, budget_range_max_satang)
+SELECT id, 'other', 'AE-DIRECT-04', 'won', 100, '{"description": "จัดซื้อประจำเดือน โครงการบ้านจัดสรร 50 หลัง"}'::jsonb, 200000000, 500000000
+FROM public.customers WHERE code = 'C004'
+ON CONFLICT DO NOTHING;
+
+-- Seed Quotations
+INSERT INTO public.quotations (number, customer_id, status, subtotal_satang, bill_discount_satang, vat_rate, vat_mode, vat_amount_satang, total_satang, terms, note)
+SELECT 'QT-202609-0001', id, 'sent', 48500000, 1500000, 7, 'exclusive', 3290000, 50290000, 'เครดิตเทอม 30 วัน จัดส่งฟรีถึงหน้างาน', 'เสนอราคาโครงการทาวน์โฮม สุขุมวิท 71'
+FROM public.customers WHERE code = 'C001'
+ON CONFLICT (number) DO NOTHING;
+
+INSERT INTO public.quotations (number, customer_id, status, subtotal_satang, bill_discount_satang, vat_rate, vat_mode, vat_amount_satang, total_satang, terms, note)
+SELECT 'QT-202609-0002', id, 'accepted', 125000000, 5000000, 7, 'exclusive', 8400000, 128400000, 'เครดิตเทอม 45 วัน วงเงินพิเศษ Corporate Partner', 'จัดซื้อวัสดุโครงสร้างประจำเดือน ก.ย. 2026'
+FROM public.customers WHERE code = 'C003'
+ON CONFLICT (number) DO NOTHING;
+
+-- Seed Orders
+INSERT INTO public.orders (number, customer_id, status, total_satang, credit_check_result, credit_used_pct, note)
+SELECT 'SO-202609-0001', id, 'paid', 128400000, 'pass', 45, 'ผ่านการตรวจสอบวงเงินเครดิตแล้ว จัดส่งจากศูนย์ CDC01'
+FROM public.customers WHERE code = 'C003'
+ON CONFLICT (number) DO NOTHING;
+
+INSERT INTO public.orders (number, customer_id, status, total_satang, credit_check_result, credit_used_pct, note)
+SELECT 'SO-202609-0002', id, 'awaiting_payment', 50290000, 'pass', 60, 'ลูกค้ายื่นสลิปโอนเงินแล้ว อยู่ระหว่างตรวจสอบบัญชี'
+FROM public.customers WHERE code = 'C001'
+ON CONFLICT (number) DO NOTHING;
+

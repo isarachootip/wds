@@ -29,17 +29,24 @@ async function fetchStats() {
   } catch { return {} }
 }
 
+import { SeedButton } from './SeedButton'
+
 export default async function AdminEventsPage() {
   noStore()
   const [events, stats] = await Promise.all([fetchFailedEvents(), fetchStats()])
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-border/60">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Domain Events</h1>
-          <p className="text-sm text-gray-500 mt-0.5">จัดการ event ที่ค้าง/พัง</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Domain Events & System Admin
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            จัดการ Event Store, Audit Logs และข้อมูลระบบ
+          </p>
         </div>
+        <SeedButton />
       </div>
 
       {/* Stats */}
