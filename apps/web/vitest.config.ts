@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    exclude: ['playwright/**', 'e2e/**', 'node_modules/**', 'src/__tests__/rls-audit.test.ts'],
+    exclude: ['playwright/**', 'e2e/**', 'node_modules/**', '.next/**', 'src/__tests__/rls-audit.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

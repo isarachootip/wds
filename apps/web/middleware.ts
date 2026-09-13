@@ -86,71 +86,116 @@ export async function middleware(request: NextRequest) {
   const rateLimitResponse = checkRateLimit(request)
   if (rateLimitResponse) return rateLimitResponse
 
-  let supabaseResponse = NextResponse.next({ request })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
   const pathname = request.nextUrl.pathname
 
-  // Allow public routes and API routes without auth
-  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
-    return supabaseResponse
-  }
-  if (pathname.startsWith('/api/')) {
-    return supabaseResponse
+  // 2. Allow public routes and API routes without auth immediately
+  // 3. Standalone / VPS Direct Session Check
+  const wdsSession = request.cookies.get('wds_session')?.value
+  if (wdsSession) {
+    let sessionRole: AppRole = 'admin'
+    try {
+      const parsed = JSON.parse(wdsSession)
+      sessionRole = parsed.role || 'admin'
+    } catch {}
+
+    if (pathname === '/' || pathname === '/login') {
+      const url = request.nextUrl.clone()
+      url.pathname = getRedirectPath([sessionRole])
+      return NextResponse.redirect(url)
+    }
+
+    if (pathname.startsWith('/wds') && sessionRole === 'technician') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/visit/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    if (pathname.startsWith('/visit') && sessionRole === 'customer') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/portal'
+      return NextResponse.redirect(url)
+    }
+
+    return NextResponse.next({ request })
   }
 
-  // Not authenticated → login
-  if (!user) {
+  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route)) || pathname.startsWith('/api/')) {
+    return NextResponse.next({ request })
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // If Supabase credentials are missing, redirect to login with graceful fallback
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('placeholder.supabase.co')) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  const { data: userRolesData } = await supabase
-    .from('user_roles')
-    .select('roles(name)')
-    .eq('user_id', user.id)
-    .is('deleted_at', null)
+  let supabaseResponse = NextResponse.next({ request })
 
-  const roles: AppRole[] = (userRolesData ?? []).flatMap(ur => {
-    const rolesField = ur.roles as { name: string } | { name: string }[] | null
-    if (!rolesField) return []
-    if (Array.isArray(rolesField)) return rolesField.map(r => r.name as AppRole)
-    return [rolesField.name as AppRole]
-  })
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseKey,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll() },
+          setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({ request })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
+        },
+      }
+    )
 
-  if (pathname === '/') {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // Not authenticated → login
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+
+    const { data: userRolesData } = await supabase
+      .from('user_roles')
+      .select('roles(name)')
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+
+    const roles: AppRole[] = (userRolesData ?? []).flatMap(ur => {
+      const rolesField = ur.roles as { name: string } | { name: string }[] | null
+      if (!rolesField) return []
+      if (Array.isArray(rolesField)) return rolesField.map(r => r.name as AppRole)
+      return [rolesField.name as AppRole]
+    })
+
+    if (pathname === '/') {
+      const url = request.nextUrl.clone()
+      url.pathname = getRedirectPath(roles)
+      return NextResponse.redirect(url)
+    }
+
+    if (pathname.startsWith('/wds') && roles.includes('technician') && !roles.includes('admin')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/visit/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    if (pathname.startsWith('/visit') && roles.includes('customer')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/portal'
+      return NextResponse.redirect(url)
+    }
+  } catch (err) {
+    console.error('[Middleware] Supabase auth check error:', err)
     const url = request.nextUrl.clone()
-    url.pathname = getRedirectPath(roles)
-    return NextResponse.redirect(url)
-  }
-
-  if (pathname.startsWith('/wds') && roles.includes('technician') && !roles.includes('admin')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/visit/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  if (pathname.startsWith('/visit') && roles.includes('customer')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/portal'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
