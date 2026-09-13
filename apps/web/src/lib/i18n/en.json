@@ -1,0 +1,60 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View details",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "Error occurred",
+    "success": "Success",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "status": "Status",
+    "createdAt": "Created At",
+    "updatedAt": "Updated At",
+    "actions": "Actions"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "loginWithMagicLink": "Login with Magic Link",
+    "checkEmail": "Check your email"
+  },
+  "wds": {
+    "title": "WDS - Field Sales & Service",
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "leads": "Leads",
+    "siteVisits": "Site Visits",
+    "payments": "Payments",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "visit": {
+    "title": "Visit App",
+    "todayJobs": "Today's Jobs",
+    "map": "Map",
+    "checkIn": "Check In",
+    "history": "History",
+    "profile": "Profile",
+    "siteOn": "Site On",
+    "workLog": "Work Log",
+    "checkOut": "Check Out"
+  },
+  "portal": {
+    "title": "Quotation",
+    "viewQuotation": "View Quotation",
+    "accept": "Accept Order",
+    "reject": "Reject",
+    "totalAmount": "Total",
+    "vatAmount": "VAT (7%)",
+    "grandTotal": "Grand Total"
+  }
+}

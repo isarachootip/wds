@@ -3,7 +3,7 @@
 
 # Regex pattern enforcing requirement ID: [FR-xx-xxx] or [NFR-xx-xxx] or [BR-xxx] or [MIG-xxx]
 COMMIT_MSG=$(cat "$1")
-PATTERN="^\[(FR-[A-Z]{2}-\d{3}|NFR-[A-Z]{3}-\d{3}|BR-\d{3}|MIG-\d{3})\] .+"
+PATTERN="^\[(FR-[A-Z]{2}-[0-9]{3}|NFR-[A-Z]{3}-[0-9]{3}|BR-[0-9]{3}|MIG-[0-9]{3})\] .+"
 
 if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
   echo "\n\033[31m[ERROR] Commit message rejected!\033[0m"

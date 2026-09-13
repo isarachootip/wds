@@ -1,0 +1,105 @@
+﻿name: Deploy to Hostinger VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:    # กด Deploy ด้วยมือจาก GitHub UI ได้
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # 1. Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      # 3. Setup Node.js
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # 4. Install dependencies
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 5. Typecheck
+      - name: Type check
+        run: pnpm --filter @wds/app typecheck
+
+      # 6. Unit tests
+      - name: Unit tests
+        run: pnpm --filter @wds/app test
+
+      # 7. Build (standalone output)
+      - name: Build
+        run: pnpm --filter @wds/app build
+        env:
+          NODE_ENV: production
+          # ใส่ build-time env vars ที่ต้องการ
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+      # 8. Package standalone build
+      - name: Package build
+        run: |
+          # Copy static assets into standalone folder (required for standalone output)
+          cp -r apps/web/public apps/web/.next/standalone/apps/web/
+          cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/
+
+      # 9. Deploy to VPS via rsync over SSH
+      - name: Deploy to VPS
+        uses: burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete --exclude='.env.production' --exclude='node_modules'
+          path: apps/web/.next/standalone/
+          remote_path: /home/deploy/wds/
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_user: ${{ secrets.VPS_USER }}
+          remote_key: ${{ secrets.VPS_SSH_KEY }}
+
+      # 10. Restart PM2 on VPS
+      - name: Restart application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            source "$NVM_DIR/nvm.sh"
+
+            cd /home/deploy/wds
+
+            # Copy ecosystem config if not exists
+            [ -f /home/deploy/wds-config/ecosystem.config.js ] && \
+              cp /home/deploy/wds-config/ecosystem.config.js .
+
+            # Start or restart PM2
+            pm2 describe wds > /dev/null 2>&1 \
+              && pm2 restart wds \
+              || pm2 start ecosystem.config.js
+
+            pm2 save
+            echo "✅ Deployed successfully at $(date)"
+            pm2 status
+
+      # 11. Notify result
+      - name: Deployment summary
+        if: always()
+        run: |
+          echo "### Deploy Result: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Time: $(date)" >> $GITHUB_STEP_SUMMARY

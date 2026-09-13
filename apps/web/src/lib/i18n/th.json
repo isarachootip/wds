@@ -1,0 +1,60 @@
+{
+  "common": {
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "view": "ดูรายละเอียด",
+    "search": "ค้นหา",
+    "filter": "กรอง",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "confirm": "ยืนยัน",
+    "back": "กลับ",
+    "next": "ถัดไป",
+    "status": "สถานะ",
+    "createdAt": "วันที่สร้าง",
+    "updatedAt": "วันที่แก้ไข",
+    "actions": "การดำเนินการ"
+  },
+  "auth": {
+    "login": "เข้าสู่ระบบ",
+    "logout": "ออกจากระบบ",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "forgotPassword": "ลืมรหัสผ่าน?",
+    "loginWithMagicLink": "เข้าสู่ระบบด้วย Magic Link",
+    "checkEmail": "ตรวจสอบอีเมลของคุณ"
+  },
+  "wds": {
+    "title": "WDS - ระบบขายและติดตั้ง",
+    "dashboard": "แดชบอร์ด",
+    "customers": "ลูกค้า",
+    "leads": "ลีด",
+    "siteVisits": "สำรวจหน้างาน",
+    "payments": "การชำระเงิน",
+    "reports": "รายงาน",
+    "settings": "ตั้งค่า"
+  },
+  "visit": {
+    "title": "Visit App",
+    "todayJobs": "งานวันนี้",
+    "map": "แผนที่",
+    "checkIn": "เช็คอิน",
+    "history": "ประวัติ",
+    "profile": "โปรไฟล์",
+    "siteOn": "เข้าไซต์",
+    "workLog": "บันทึกงาน",
+    "checkOut": "เช็คเอาท์"
+  },
+  "portal": {
+    "title": "ใบเสนอราคา",
+    "viewQuotation": "ดูใบเสนอราคา",
+    "accept": "ยืนยันสั่งซื้อ",
+    "reject": "ปฏิเสธ",
+    "totalAmount": "ยอดรวม",
+    "vatAmount": "ภาษีมูลค่าเพิ่ม (7%)",
+    "grandTotal": "ยอดสุทธิ"
+  }
+}

@@ -1,0 +1,17 @@
+export const seedProducts = [
+  { sku: 'P001', name: 'ปูนซีเมนต์ SCG ตราช้าง ถุง 50 กก.', nameEn: 'SCG Cement 50kg', unit: 'ถุง', basePriceSatang: 19500, category: 'วัสดุก่อสร้าง', brand: 'SCG' },
+  { sku: 'P002', name: 'ทรายหยาบ', nameEn: 'Coarse Sand', unit: 'ลูกบาศก์เมตร', basePriceSatang: 45000, category: 'วัสดุก่อสร้าง', brand: '-' },
+  { sku: 'P003', name: 'หินคลุก', nameEn: 'Gravel', unit: 'ลูกบาศก์เมตร', basePriceSatang: 55000, category: 'วัสดุก่อสร้าง', brand: '-' },
+  { sku: 'P004', name: 'เหล็กเส้นกลม RB6', nameEn: 'Round Bar RB6', unit: 'เส้น', basePriceSatang: 8500, category: 'เหล็ก', brand: 'มิลล์คอน' },
+  { sku: 'P005', name: 'เหล็กข้ออ้อย DB12', nameEn: 'Deformed Bar DB12', unit: 'เส้น', basePriceSatang: 18500, category: 'เหล็ก', brand: 'มิลล์คอน' },
+  { sku: 'P006', name: 'เหล็กข้ออ้อย DB16', nameEn: 'Deformed Bar DB16', unit: 'เส้น', basePriceSatang: 32000, category: 'เหล็ก', brand: 'มิลล์คอน' },
+  { sku: 'P007', name: 'อิฐมวลเบา SCG ขนาด 7.5x20x60 ซม.', nameEn: 'Lightweight Block 7.5x20x60cm', unit: 'ก้อน', basePriceSatang: 1800, category: 'วัสดุก่อสร้าง', brand: 'SCG' },
+  { sku: 'P008', name: 'กระเบื้องหลังคาลอนคู่ SCG รุ่น Fiber Cement', nameEn: 'SCG Fiber Cement Roof Tile', unit: 'แผ่น', basePriceSatang: 5500, category: 'หลังคา', brand: 'SCG' },
+  { sku: 'P009', name: 'สีทาภายนอก TOA ซุปเปอร์ชิลด์ ขนาด 18 ลิตร', nameEn: 'TOA Super Shield Exterior Paint 18L', unit: 'ถัง', basePriceSatang: 189000, category: 'สี', brand: 'TOA' },
+  { sku: 'P010', name: 'สีรองพื้นปูน TOA ขนาด 18 ลิตร', nameEn: 'TOA Primer 18L', unit: 'ถัง', basePriceSatang: 89000, category: 'สี', brand: 'TOA' },
+  { sku: 'P011', name: 'ท่อ PVC ชั้น 8.5 ขนาด 4 นิ้ว ยาว 4 ม.', nameEn: 'PVC Pipe 4inch 4m', unit: 'ท่อน', basePriceSatang: 28500, category: 'ท่อและข้อต่อ', brand: 'ท่อไทย' },
+  { sku: 'P012', name: 'แผ่นไม้อัด 4x8 ฟุต หนา 12 มม.', nameEn: 'Plywood 4x8ft 12mm', unit: 'แผ่น', basePriceSatang: 42000, category: 'ไม้', brand: '-' },
+  { sku: 'P013', name: 'เหล็กกล่อง 2x4 นิ้ว หนา 2 มม. ยาว 6 ม.', nameEn: 'Square Tube 2x4inch 2mm 6m', unit: 'เส้น', basePriceSatang: 68000, category: 'เหล็ก', brand: 'มิลล์คอน' },
+  { sku: 'P014', name: 'ฉนวนกันความร้อนแผ่น 2 นิ้ว ขนาด 1.2x2.4 ม.', nameEn: 'Insulation Board 2inch 1.2x2.4m', unit: 'แผ่น', basePriceSatang: 35000, category: 'ฉนวน', brand: 'K-FLEX' },
+  { sku: 'P015', name: 'ซิลิโคนยาแนวกันน้ำ GE ขนาด 280 มล.', nameEn: 'GE Waterproof Silicone 280ml', unit: 'หลอด', basePriceSatang: 8900, category: 'กาว/ซิลิโคน', brand: 'GE' },
+]
