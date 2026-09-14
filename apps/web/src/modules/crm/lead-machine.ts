@@ -1,4 +1,5 @@
 import type { StateMachineConfig } from '@/lib/statemachine'
+export { isValidTransition } from '@/lib/statemachine'
 
 export const LEAD_MACHINE: StateMachineConfig = {
   entity: 'lead',

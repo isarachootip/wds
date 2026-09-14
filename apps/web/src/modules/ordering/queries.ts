@@ -22,6 +22,7 @@ export async function getQuotations(filters?: { status?: string }) {
       totalSatang: quotations.totalSatang,
       validUntil: quotations.validUntil,
       version: quotations.version,
+      publicToken: quotations.publicToken,
       customerName: customers.name,
       createdAt: quotations.createdAt,
     })

@@ -23,13 +23,17 @@ export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
 }
 
 export const LOST_REASONS = [
+  'ราคาแพง',
+  'เปลี่ยนใจ',
+  'คู่แข่ง',
+  'ติดต่อไม่ได้',
+  'อื่นๆ',
   'ราคาสูงเกินไป',
   'เลือกคู่แข่ง',
   'ยกเลิกโครงการ',
-  'ติดต่อไม่ได้',
   'ไม่ตรงความต้องการ',
   'งบประมาณไม่เพียงพอ',
-  'อื่นๆ',
+  'ยอดสั่งซื้อต่ำกว่าเกณฑ์ขายส่ง',
 ] as const
 
 export type LostReason = (typeof LOST_REASONS)[number]

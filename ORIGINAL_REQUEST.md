@@ -95,3 +95,97 @@ Integrity mode: development
 - [ ] มีเอกสาร Technical Specifications ใน `docs/` พร้อม Database Schema (DDL / Data Types), API Contracts (Request/Response JSON Schema), และ Engineering Guidelines
 - [ ] เนื้อหาทั้งหมดสอดคล้องกับภาพกระบวนการทำงานและเอกสารมาตรฐาน WDS เดิมในระบบอย่างสมบูรณ์
 - [ ] เอกสารทั้งหมดจัดเก็บในโครงสร้างไฟล์ Markdown ที่เป็นระเบียบ ชัดเจน และพร้อมนำไปใช้ปฏิบัติงานได้ทันที
+
+## Follow-up Request — 2026-09-13T11:49:44Z
+
+พัฒนาระบบ Lead Management & CRM Pipeline บนระบบ WDS โดยอ้างอิง Flow ตามแผนภาพและมี UI/UX คล้าย `https://vsite.online/leads` สำหรับทีมขาย (Sales / AE - Account Executive) ครอบคลุมกระบวนการตั้งแต่ บันทึก Lead Omnichannel → Follow-up ติดตามลูกค้า → Sales/AE นัดหมายลงพื้นที่พบลูกค้า (Site Visit: Check-in / Check-out) → บันทึกใบเสนอราคา (Quotation) จากระบบ E-ordering → ปิดการขาย (Close Win / Close Lost) พร้อมส่งต่องานเข้าสู่กระบวนการ Credit Check, Payment และ Delivery ใน WDS
+
+Working directory: c:\atgv\wds
+Integrity mode: development
+
+## Requirements
+
+### R1. Lead Capture & Omnichannel Inbound (สไตล์ vsite.online/leads)
+- หน้ารายการและหน้าบันทึก Lead ที่ใช้งานง่าย ออกแบบเพื่อทีมขาย (Sales / AE) ระบุแหล่งที่มาได้ (Line, โทรศัพท์, หน้าร้าน Walk-in) พร้อมข้อมูลติดต่อและความต้องการสินค้า/โครงการของลูกค้า
+- หน้าแสดงผลแบบ Pipeline / Kanban หรือ Data Table พร้อม Filter สถานะที่ดูง่าย ค้นหาเร็ว และอัปเดตสถานะได้สะดวก
+
+### R2. Follow-up Activity & Contact Timeline
+- ระบบบันทึกประวัติการติดต่อลูกค้าสำหรับ Sales / AE (Activity Log / Call Note) เช่น วันที่โทรคุย ผลการสนทนา ความคืบหน้า และกำหนดการนัดหมายครั้งถัดไป (Next Action / Follow-up Date)
+- การเปลี่ยนสถานะของ Lead ตามขั้นตอนการขาย (New → Contacted → Qualified / In-Progress)
+
+### R3. Site Visit Appointment & Sales/AE Field Check-in/out
+- ฟังก์ชันนัดหมายลงพื้นที่สำรวจหน้างาน/พบลูกค้า (Site Visit Schedule) มอบหมายให้ Sales / AE ผู้รับผิดชอบ พร้อมระบบอนุมัติการเดินทาง (Approve)
+- หน้าจอหรือฟังก์ชันสำหรับ Sales / AE เมื่อไปถึงหน้างาน:
+  * บันทึกเข้าพบลูกค้า / เข้าไซต์งาน (Site On / Check-in) พร้อมระบุพิกัดหรือเวลา
+  * บันทึกการปฏิบัติงาน/สรุปความต้องการหน้างาน (Work Notes & Requirements)
+  * บันทึกเสร็จสิ้นการเข้าพบ (Check-out)
+
+### R4. E-ordering Quotation Record & Deal Closing (Close Win / Close Lost)
+- ฟอร์มและ API สำหรับ Sales / AE ในการบันทึกหรือดึงเลขอ้างอิงใบเสนอราคา (Quotation No., ยอดเงินรวม, วันที่ออก QT จากระบบ E-ordering) แนบเข้ากับ Lead
+- กระบวนการตัดสินและปิดการขาย (Deal Closing):
+  * Close Win (ปิดการขายสำเร็จ): เมื่อลูกค้าตกลงรับใบเสนอราคา ปรับสถานะเป็น Won และส่งต่องานเข้ากระบวนการตรวจสอบวงเงินเครดิต (Credit Limit Check) -> ชำระเงิน (Payment) -> วางแผนจัดส่ง (Delivery) ของ WDS
+  * Close Lost (ปิดการขายไม่สำเร็จ): ปรับสถานะเป็น Lost พร้อมบังคับระบุเหตุผล (เช่น สู้ราคาไม่ไหว, ลูกค้าชะลอโครงการ, เลือกซื้อเจ้าอื่น) เพื่อใช้สรุปรายงานวิเคราะห์
+
+## Acceptance Criteria
+
+### Lead Management & Sales AE Workflow
+- [ ] มีหน้า UI สำหรับ Lead Management ใน apps/web ที่แสดงรายการ Lead, ค้นหา, กรองสถานะ และเพิ่ม Lead ใหม่ได้คล้ายคลึงกับ https://vsite.online/leads
+- [ ] Sales / AE สามารถคลิกดูรายละเอียด Lead เพื่อบันทึกประวัติ Follow-up และดู Timeline การติดต่อได้อย่างชัดเจน
+- [ ] มีฟังก์ชันนัดหมายพบลูกค้า (Site Visit) รองรับ Flow: จองวันนัด -> อนุมัติ -> Sales/AE Check-in -> Check-out
+
+### Quotation & Deal Closing Workflow
+- [ ] สามารถบันทึกข้อมูลใบเสนอราคา (Quotation Reference จากระบบ E-ordering) ผูกกับ Lead ได้
+- [ ] มี Action เปลี่ยนสถานะเป็น Close Win และ Close Lost พร้อม Modal ระบุสาเหตุเมื่อเลือก Close Lost
+- [ ] มี Automated Test หรือ Test Script ตรวจสอบ State Transitions ของ Lead (New -> Contacted -> Site Visit -> Quoted -> Won / Lost) ผ่านครบถ้วน 100%
+- [ ] โค้ดสามารถรัน Build (pnpm build หรือ test ใน apps/web) ได้สำเร็จโดยไม่มี Type Error หรือ Lint Error ที่ขัดขวางการทำงาน
+
+## Follow-up — 2026-09-14T01:35:42Z
+
+Redesign and modernize the Thai Watsadu WDS CRM and Sales Operations Web Application (`apps/web`) to fully adopt the Cruip Artifact design system (`https://cruip.com/demos/artifact/`), integrating its signature modern dashboard aesthetics, collapsible sidebar hierarchy, refined metric cards, and clean typography, while preserving Thai Watsadu's red/navy brand accents and ensuring seamless full-system continuity.
+
+Working directory: c:/atgv/wds
+Integrity mode: development
+
+## Reference Material
+- Cruip Artifact Reference: `https://cruip.com/demos/artifact/` (Live Template: `https://artifact-nextjs-template.vercel.app/`)
+- Target Workspace: `apps/web` (Next.js 15, Tailwind CSS, Radix/shadcn primitives, Lucide Icons)
+
+## Requirements
+
+### R1. Cruip Artifact Layout & Navigation Architecture
+- Re-architect the application shell to follow the Cruip Artifact layout:
+  - Collapsible desktop sidebar with nested collapsible navigation groups, active state highlights, badge indicators, and user footer profile.
+  - Responsive mobile drawer and smooth transition toggles.
+  - Sticky top header featuring sidebar toggle, command palette search trigger (`⌘K`), notification center, and dark/light theme switch.
+
+### R2. Visual System & Brand Harmonization
+- Adopt Cruip Artifact's component design language:
+  - Modern card layouts (`rounded-2xl`, subtle `border-border`, refined padding, clean shadows).
+  - Status pills and metric trend badges (`rounded-full px-2 py-0.5 text-xs font-medium`).
+  - Harmonize Thai Watsadu's red/navy enterprise identity with Artifact's modern, sleek surface palette in both light and dark modes.
+  - Consistent typography scaling, crisp tab switches (`7D | 30D | 12M`), and data display patterns.
+
+### R3. Comprehensive Screen-Level Theming
+- Revamp all core operational and backoffice views to the new Artifact style:
+  - **Executive Dashboard** (`/wds/dashboard`): Metric cards with trend indicators, activity feeds, quick actions, and revenue/order charts.
+  - **Leads Hub** (`/wds/leads`): Unified view switcher (Kanban vs Table), faceted search filters, and status badges.
+  - **Lead Detail Workbench** (`/wds/leads/[id]`): Visual stage progress stepper, unified timeline, action logging, quotation card, and deal modal dialogs.
+  - **Sales Pipeline Kanban** (`/wds/pipeline`): Column stage cards, deal sum aggregations, and drag/drop affordances.
+  - **Authentication & Core Shell** (`/login`, layout wrappers): Polished, cohesive Artifact aesthetic.
+
+### R4. Zero-Regression Functional Integrity & Production Build
+- Maintain complete functional continuity of all existing CRM server actions, database queries, state machines, and API handshakes.
+- Ensure 100% TypeScript type safety with zero lint/type errors.
+- Ensure `pnpm build` in `apps/web` builds cleanly.
+
+## Acceptance Criteria
+
+### Layout & Component Styling
+- [ ] Sidebar implements Artifact-style collapsible groups, active pill indicators, and bottom user profile card.
+- [ ] Top header includes functional sidebar toggle, Command Menu trigger (`⌘K`), theme switcher, and notification bell.
+- [ ] Cards across Dashboard, Leads Hub, and Lead Detail utilize Artifact's `rounded-2xl`, border treatment, and metric badge styling.
+- [ ] Light and dark themes render with high contrast and consistent color tokens.
+
+### Functionality & Build
+- [ ] All existing CRM workflows (Leads Kanban, Lead status progression, activity logging, quotation attachment) operate without regression.
+- [ ] `pnpm build` in `apps/web` compiles successfully without any TypeScript or build errors.

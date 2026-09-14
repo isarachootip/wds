@@ -11,6 +11,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        thaiwatsadu: {
+          red: '#D92D20',
+          darkRed: '#B42318',
+          blue: '#175CD3',
+          dark: '#1D2939',
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -60,6 +66,8 @@ const config: Config = {
         'subtle': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
       },
       borderRadius: {
+        '2xl': '1rem',
+        xl: '0.75rem',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',

@@ -84,14 +84,29 @@ export function QuotationEditor({ initialItems, customers, jobId }: Props) {
 
     startTransition(async () => {
       try {
-        const { createQuotationFromJobAction, sendQuotationAction } = await import('@/modules/ordering/actions')
+        const { createQuotationFromJobAction, createQuotationAction, sendQuotationAction } = await import('@/modules/ordering/actions')
 
         let result
         if (jobId) {
           result = await createQuotationFromJobAction(jobId, customerId, undefined, 'current-user-id')
         } else {
-          // Direct creation (no job) — simplified for now
-          result = { success: false, error: 'กรุณาสร้าง QT ผ่านหน้างาน (มี jobId)' }
+          result = await createQuotationAction({
+            customerId,
+            items: items.map(item => ({
+              description: item.description,
+              qty: item.qty,
+              unit: item.unit,
+              unitPriceSatang: item.unitPriceSatang,
+              discountSatang: item.discountSatang,
+            })),
+            billDiscountSatang: billDiscount,
+            vatRate,
+            vatMode,
+            terms,
+            note,
+            validDays,
+            actorId: 'current-user-id',
+          })
         }
 
         if (!result.success || !result.quotationId) {

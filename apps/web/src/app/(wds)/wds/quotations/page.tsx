@@ -125,6 +125,12 @@ export default async function QuotationsPage({
                         className="text-xs text-gray-500 hover:text-blue-600 border border-gray-200 rounded px-2 py-1">
                         PDF
                       </Link>
+                      {qt.publicToken && (
+                        <Link href={`/portal/q/${qt.publicToken}`} target="_blank"
+                          className="text-xs text-blue-600 hover:underline border border-blue-100 rounded px-2 py-1 bg-blue-50">
+                          ดู Portal
+                        </Link>
+                      )}
                     </div>
                   </td>
                 </tr>

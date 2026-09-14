@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyLineSignature } from '@/lib/line'
 import { getDb } from '@/lib/db'
-import { leads, leadActivities } from '@wds/db'
+import { leads, leadActivities, followUps } from '@wds/db'
 import { eq, and, isNull } from 'drizzle-orm'
 import { emit } from '@/lib/events'
 import { domainEvents } from '@wds/db'
@@ -92,6 +92,15 @@ async function handleLineEvent(event: LineEvent) {
         type: 'line',
         note: `ข้อความแรก: ${text.slice(0, 500)}`,
         occurredAt: new Date(),
+      })
+
+      // Auto-create first follow-up within 24h
+      await db.insert(followUps).values({
+        leadId: newLead.id,
+        dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        channel: 'line',
+        status: 'open',
+        note: 'ติดตาม Lead ใหม่จาก LINE ภายใน 24 ชั่วโมง (สร้างอัตโนมัติ)',
       })
 
       // Emit event so sales gets notified

@@ -1,222 +1,303 @@
 import { unstable_noStore as noStore } from 'next/cache'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { LeadStatusChanger } from './LeadStatusChanger'
-import { RequestSiteVisitForm } from './RequestSiteVisitForm'
+import {
+  User,
+  Phone,
+  MessageCircle,
+  Building2,
+  Calendar,
+  DollarSign,
+  MapPin,
+  Clock,
+  ArrowLeft,
+  Briefcase,
+  AlertCircle,
+  CheckCircle2,
+  Trophy,
+  XCircle,
+  ExternalLink,
+} from 'lucide-react'
+
+import { StageProgressStepper } from './components/StageProgressStepper'
+import { QuickActivityLogger } from './components/QuickActivityLogger'
+import { UnifiedTimeline } from './components/UnifiedTimeline'
+import { SiteVisitCard } from './components/SiteVisitCard'
+import { QuotationCard } from './components/QuotationCard'
+import { DealClosingModals } from './components/DealClosingModals'
 import { AddFollowUpForm } from './AddFollowUpForm'
+import { StatusBadge } from '@/components/ui/StatusBadge'
+import { formatTHB, satang } from '@/lib/money'
 
-const STATUS_COLORS: Record<string, string> = {
-  new: 'bg-gray-100 text-gray-700',
-  contacted: 'bg-blue-100 text-blue-700',
-  qualified: 'bg-yellow-100 text-yellow-700',
-  site_visit_requested: 'bg-purple-100 text-purple-700',
-  quoted: 'bg-orange-100 text-orange-700',
-  won: 'bg-green-100 text-green-700',
-  lost: 'bg-red-100 text-red-700',
+import { getLeadById } from '@/modules/crm/queries'
+
+const SOURCE_LABELS: Record<string, string> = {
+  line: '💬 LINE OA',
+  phone: '📞 โทรศัพท์ (Call Center)',
+  store: '🏪 หน้าร้าน (Walk-in)',
+  other: '📋 ช่องทางอื่นๆ',
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  new: 'ใหม่',
-  contacted: 'ติดต่อแล้ว',
-  qualified: 'คุณสมบัติผ่าน',
-  site_visit_requested: 'ขอสำรวจหน้างาน',
-  quoted: 'เสนอราคาแล้ว',
-  won: 'ปิดการขาย ✅',
-  lost: 'สูญเสีย ❌',
-}
-
-const ACTIVITY_LABELS: Record<string, string> = {
-  call: '📞 โทรออก',
-  line: '💬 LINE',
-  visit: '🏠 เยี่ยมชม',
-  note: '📝 บันทึก',
-  quote_sent: '📄 ส่ง QT',
-  status_change: '🔄 เปลี่ยนสถานะ',
-}
-
-export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function LeadDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   noStore()
   const { id } = await params
 
   let data: any = null
   try {
-    const { getLeadById } = await import('@/modules/crm/queries')
     data = await getLeadById(id)
-  } catch {}
+  } catch {
+    data = null
+  }
 
-  if (!data) {
+  if (!data || !data.lead) {
     notFound()
   }
 
-  const { lead, activities, followUps, siteVisits } = data
+  const { lead, activities = [], followUps = [], siteVisits = [], quotations = [] } = data
   const leadData = lead.leads
   const customerData = lead.customers
 
-  // Build unified timeline
-  type TimelineItem = { id: string; at: Date; kind: 'activity' | 'followup'; data: any }
-  const timeline: TimelineItem[] = [
-    ...activities.map((a: any) => ({ id: a.id, at: new Date(a.occurredAt), kind: 'activity' as const, data: a })),
-    ...followUps.map((f: any) => ({ id: f.id, at: new Date(f.dueAt), kind: 'followup' as const, data: f })),
-  ].sort((a, b) => b.at.getTime() - a.at.getTime())
-
-  const canRequestSiteVisit = ['qualified', 'contacted'].includes(leadData.status)
+  const createdDate = new Date(leadData.createdAt)
+  const thaiBuddhistFormatted = createdDate.toLocaleDateString('th-TH', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-            <Link href="/wds/leads" className="hover:text-blue-600">Lead</Link>
+    <div className="p-4 sm:p-6 max-w-[1700px] mx-auto space-y-6">
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* Top Header Card with Breadcrumb, Customer Title, Company Badge, Buddhist Era */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs text-card-foreground">
+        {/* Breadcrumbs & Status Indicator */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-border">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Link
+              href="/wds/leads"
+              className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary font-medium transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>/wds/leads</span>
+            </Link>
             <span>/</span>
-            <span>{customerData?.name ?? 'ไม่ระบุ'}</span>
+            <span className="text-foreground font-mono font-semibold">
+              {`Lead #${leadData.id.slice(0, 8)}`}
+            </span>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {customerData?.name ?? 'Lead ไม่ระบุชื่อ'}
-          </h1>
-          {customerData?.phone && (
-            <p className="text-gray-500 text-sm mt-1">{customerData.phone}</p>
-          )}
+
+          <div className="flex items-center gap-2">
+            <StatusBadge variant={leadData.status as any} dot />
+          </div>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[leadData.status] ?? 'bg-gray-100 text-gray-700'}`}>
-          {STATUS_LABELS[leadData.status] ?? leadData.status}
-        </span>
-      </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* Timeline (left 2/3) */}
-        <div className="col-span-2 space-y-4">
-          {/* Change status */}
-          {leadData.status !== 'won' && leadData.status !== 'lost' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">เปลี่ยนสถานะ</h3>
-              <LeadStatusChanger
-                leadId={leadData.id}
-                currentStatus={leadData.status}
-              />
+        {/* Customer Title, Company Badge, Contacts & Budget Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">
+                {customerData?.name ?? 'Lead ลูกค้าทั่วไป'}
+              </h1>
+
+              {customerData?.taxId ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-muted text-muted-foreground border border-border">
+                  <Building2 className="w-3 h-3 text-primary" />
+                  <span>{`Tax ID: ${customerData.taxId}`}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
+                  <Building2 className="w-3 h-3 text-muted-foreground" />
+                  <span>ลูกค้านิติบุคคล / ทั่วไป</span>
+                </span>
+              )}
             </div>
-          )}
 
-          {/* Request Site Visit */}
-          {canRequestSiteVisit && leadData.status !== 'site_visit_requested' && (
-            <div className="bg-white rounded-xl border border-purple-200 p-4">
-              <h3 className="text-sm font-medium text-purple-700 mb-3">🏠 ขอสำรวจหน้างาน</h3>
-              <RequestSiteVisitForm leadId={leadData.id} />
-            </div>
-          )}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              {customerData?.phone && (
+                <a
+                  href={`tel:${customerData.phone}`}
+                  className="inline-flex items-center gap-1.5 text-primary hover:underline bg-primary/10 px-2.5 py-0.5 rounded-md font-mono font-medium border border-primary/20"
+                >
+                  <Phone className="w-3 h-3" />
+                  <span>{customerData.phone}</span>
+                </a>
+              )}
 
-          {/* Site visits list */}
-          {siteVisits.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">การสำรวจหน้างาน</h3>
-              <div className="space-y-2">
-                {siteVisits.map((sv: any) => (
-                  <div key={sv.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded-lg">
-                    <div>
-                      <span className="font-medium">{sv.purpose}</span>
-                      <span className="text-gray-400 ml-2 text-xs">
-                        {new Date(sv.requestedAt).toLocaleDateString('th-TH')}
-                      </span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      sv.status === 'done' ? 'bg-green-100 text-green-700' :
-                      sv.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                      'bg-purple-100 text-purple-700'
-                    }`}>
-                      {sv.status === 'requested' ? 'รอนัดหมาย' :
-                       sv.status === 'scheduled' ? 'นัดแล้ว' :
-                       sv.status === 'done' ? 'เสร็จสิ้น' : 'ยกเลิก'}
-                    </span>
-                  </div>
-                ))}
+              <div className="inline-flex items-center gap-1.5 bg-muted px-2.5 py-0.5 rounded-md text-foreground border border-border">
+                <span>{SOURCE_LABELS[leadData.source] ?? leadData.source}</span>
+                {leadData.channelRef && (
+                  <span className="text-muted-foreground font-mono text-[10px]">
+                    {`(${leadData.channelRef})`}
+                  </span>
+                )}
+              </div>
+
+              {leadData.projectLocation && (
+                <div className="inline-flex items-center gap-1 text-muted-foreground">
+                  <MapPin className="w-3 h-3 text-rose-500" />
+                  <span>{leadData.projectLocation}</span>
+                </div>
+              )}
+
+              <div className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
+                <Clock className="w-3 h-3" />
+                <span>
+                  {`สร้างเมื่อ: ${thaiBuddhistFormatted} (พ.ศ. 2569)`}
+                </span>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Timeline */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">ประวัติกิจกรรม</h3>
-            {timeline.length === 0 ? (
-              <p className="text-gray-400 text-sm">ยังไม่มีกิจกรรม</p>
+          {/* Budget Display Strip */}
+          <div className="flex items-center gap-2">
+            {leadData.budgetRangeMinSatang || leadData.budgetRangeMaxSatang ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 text-right">
+                <span className="text-[10px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold block">
+                  งบประมาณโครงการ (Budget)
+                </span>
+                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                  {leadData.budgetRangeMinSatang
+                    ? formatTHB(satang(leadData.budgetRangeMinSatang))
+                    : '฿0'}
+                  {' - '}
+                  {leadData.budgetRangeMaxSatang
+                    ? formatTHB(satang(leadData.budgetRangeMaxSatang))
+                    : 'ไม่ระบุ'}
+                </span>
+              </div>
             ) : (
-              <div className="space-y-3">
-                {timeline.map(item => (
-                  <div key={item.id} className="flex gap-3">
-                    <div className="w-2 h-2 rounded-full bg-gray-300 mt-2 flex-shrink-0" />
-                    <div className="flex-1">
-                      {item.kind === 'activity' ? (
-                        <div>
-                          <span className="text-xs font-medium text-gray-600">
-                            {ACTIVITY_LABELS[item.data.type] ?? item.data.type}
-                          </span>
-                          {item.data.note && (
-                            <p className="text-sm text-gray-700 mt-0.5">{item.data.note}</p>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                            item.data.status === 'done' ? 'bg-green-100 text-green-700' :
-                            item.data.status === 'skipped' ? 'bg-gray-100 text-gray-500' :
-                            new Date(item.data.dueAt) < new Date() ? 'bg-red-100 text-red-600' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            📅 Follow-up: {item.data.status === 'done' ? 'เสร็จแล้ว' : item.data.status === 'skipped' ? 'ข้ามไป' : 'รอดำเนินการ'}
-                          </span>
-                          {item.data.note && (
-                            <p className="text-sm text-gray-700 mt-0.5">{item.data.note}</p>
-                          )}
-                        </div>
-                      )}
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {item.at.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div className="bg-muted/50 border border-border rounded-xl px-4 py-2.5 text-right">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block">
+                  งบประมาณโครงการ
+                </span>
+                <span className="text-xs text-muted-foreground">ยังไม่ได้ระบุงบประมาณ</span>
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Sidebar (right 1/3) */}
-        <div className="space-y-4">
-          {/* Lead info */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">ข้อมูล Lead</h3>
-            <dl className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-gray-500">ช่องทาง</dt>
-                <dd className="text-gray-900">{leadData.source}</dd>
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 1. Visual Stage Progress Stepper */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      <StageProgressStepper
+        leadId={leadData.id}
+        currentStatus={leadData.status}
+        lostReason={leadData.lostReason}
+      />
+
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      {/* 2-Column Responsive Execution Grid (Left 7, Right 5) */}
+      {/* ──────────────────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column (lg:col-span-7) */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Customer & Project Parameters Card */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-xs text-card-foreground">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              <span>ข้อมูลลูกค้า & โครงการ (Customer & Project Parameters)</span>
+            </h3>
+
+            <dl className="space-y-2.5 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-border/60">
+                <dt className="text-muted-foreground">ชื่อลูกค้า / นิติบุคคล</dt>
+                <dd className="font-semibold text-foreground text-right">
+                  {customerData?.name ?? 'ไม่ระบุ'}
+                </dd>
               </div>
-              {leadData.channelRef && (
-                <div className="flex justify-between">
-                  <dt className="text-gray-500">Ref</dt>
-                  <dd className="text-gray-900 text-xs break-all">{leadData.channelRef}</dd>
-                </div>
-              )}
-              {(leadData.budgetRangeMinSatang || leadData.budgetRangeMaxSatang) && (
-                <div className="flex justify-between">
-                  <dt className="text-gray-500">งบประมาณ</dt>
-                  <dd className="text-gray-900">
-                    {leadData.budgetRangeMinSatang ? `฿${(leadData.budgetRangeMinSatang / 100).toLocaleString('th-TH')}` : '-'}
-                    {' - '}
-                    {leadData.budgetRangeMaxSatang ? `฿${(leadData.budgetRangeMaxSatang / 100).toLocaleString('th-TH')}` : '-'}
+
+              {customerData?.phone && (
+                <div className="flex justify-between py-1.5 border-b border-border/60">
+                  <dt className="text-muted-foreground">เบอร์โทรศัพท์ติดต่อ</dt>
+                  <dd className="font-mono font-medium text-foreground text-right">
+                    {customerData.phone}
                   </dd>
                 </div>
               )}
-              <div className="flex justify-between">
-                <dt className="text-gray-500">สร้างเมื่อ</dt>
-                <dd className="text-gray-900 text-xs">
-                  {new Date(leadData.createdAt).toLocaleDateString('th-TH')}
+
+              {customerData?.email && (
+                <div className="flex justify-between py-1.5 border-b border-border/60">
+                  <dt className="text-muted-foreground">อีเมล</dt>
+                  <dd className="text-foreground text-right">{customerData.email}</dd>
+                </div>
+              )}
+
+              <div className="flex justify-between py-1.5 border-b border-border/60">
+                <dt className="text-muted-foreground">ช่องทางที่เข้ามา</dt>
+                <dd className="text-foreground text-right">
+                  {SOURCE_LABELS[leadData.source] ?? leadData.source}
                 </dd>
               </div>
+
+              {leadData.channelRef && (
+                <div className="flex justify-between py-1.5 border-b border-border/60">
+                  <dt className="text-muted-foreground">Ref ช่องทาง</dt>
+                  <dd className="font-mono text-muted-foreground text-[11px] text-right break-all">
+                    {leadData.channelRef}
+                  </dd>
+                </div>
+              )}
+
+              <div className="flex justify-between py-1.5 border-b border-border/60">
+                <dt className="text-muted-foreground">AE ผู้รับผิดชอบ</dt>
+                <dd className="text-foreground text-right font-medium">
+                  {leadData.assignedTo || 'สมเกียรติ ยอดขาย (ทีม AE B2B บางนา)'}
+                </dd>
+              </div>
+
+              {leadData.interestSummary && (
+                <div className="pt-2">
+                  <dt className="text-muted-foreground mb-1 font-medium">ความต้องการ / สินค้าที่สนใจ</dt>
+                  <dd className="bg-muted/50 border border-border/60 p-3 rounded-xl text-foreground leading-relaxed">
+                    {leadData.interestSummary}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
 
-          {/* Add follow-up */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">สร้าง Follow-up</h3>
+          {/* Quick Activity Logger Bar */}
+          <QuickActivityLogger leadId={leadData.id} />
+
+          {/* Site Visit Management Card */}
+          <SiteVisitCard leadId={leadData.id} siteVisits={siteVisits} />
+
+          {/* Quotation Card */}
+          <QuotationCard leadId={leadData.id} quotations={quotations} />
+        </div>
+
+        {/* Right Column (lg:col-span-5) */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Deal Closing Actions Card */}
+          <DealClosingModals
+            leadId={leadData.id}
+            currentStatus={leadData.status}
+            quotations={quotations}
+            lostReason={leadData.lostReason}
+          />
+
+          {/* Chronological Unified Timeline Stream */}
+          <UnifiedTimeline
+            activities={activities}
+            followUps={followUps}
+            siteVisits={siteVisits}
+            quotations={quotations}
+          />
+
+          {/* Follow-up Scheduler Card */}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-xs text-card-foreground">
+            <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-cyan-500" />
+              <span>สร้างงานติดตาม (Follow-up)</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              กำหนดเวลาโทรกลับ หรือนัดหมายพูดคุยลูกค้าครั้งถัดไป
+            </p>
             <AddFollowUpForm leadId={leadData.id} />
           </div>
         </div>

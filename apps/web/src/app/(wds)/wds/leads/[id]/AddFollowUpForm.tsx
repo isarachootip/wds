@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import React, { useState, useTransition } from 'react'
+import { Button } from '@/components/ui/button'
+import { Calendar } from 'lucide-react'
 
 export function AddFollowUpForm({ leadId }: { leadId: string }) {
   const [isPending, startTransition] = useTransition()
@@ -12,59 +14,77 @@ export function AddFollowUpForm({ leadId }: { leadId: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!dueAt) { setError('กรุณาระบุวันที่'); return }
+    if (!dueAt) {
+      setError('กรุณาระบุวันที่และเวลา')
+      return
+    }
     setError('')
     startTransition(async () => {
       const { createFollowUpAction } = await import('@/modules/crm/actions')
       const result = await createFollowUpAction(
-        { leadId, dueAt, assigneeId: 'current-user-id', channel, note: note || undefined },
-        'current-user-id'
+        { leadId, dueAt, assigneeId: 'sales-ae', channel, note: note || undefined },
+        'sales-ae'
       )
-      if (result.success) { setSuccess(true); setTimeout(() => setSuccess(false), 2000) }
-      else setError(result.error ?? 'เกิดข้อผิดพลาด')
+      if (result.success) {
+        setSuccess(true)
+        setDueAt('')
+        setNote('')
+        setTimeout(() => setSuccess(false), 2500)
+      } else {
+        setError(result.error ?? 'เกิดข้อผิดพลาดในการสร้าง Follow-up')
+      }
     })
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-xs text-gray-600 mb-1">กำหนดติดตาม</label>
+        <label className="block text-xs font-medium text-foreground mb-1">กำหนดติดตาม (Due Date & Time)</label>
         <input
           type="datetime-local"
           value={dueAt}
-          onChange={e => setDueAt(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          onChange={(e) => setDueAt(e.target.value)}
+          className="w-full border border-input bg-background rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
       <div>
-        <label className="block text-xs text-gray-600 mb-1">ช่องทาง</label>
-        <select value={channel} onChange={e => setChannel(e.target.value as any)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-          <option value="phone">📞 โทรศัพท์</option>
-          <option value="line">💬 LINE</option>
-          <option value="email">📧 อีเมล</option>
-          <option value="visit">🏠 เยี่ยมชม</option>
+        <label className="block text-xs font-medium text-foreground mb-1">ช่องทางการติดต่อ</label>
+        <select
+          value={channel}
+          onChange={(e) => setChannel(e.target.value as any)}
+          className="w-full border border-input bg-background rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="phone" className="bg-popover text-popover-foreground">📞 โทรศัพท์ (Call)</option>
+          <option value="line" className="bg-popover text-popover-foreground">💬 LINE OA</option>
+          <option value="email" className="bg-popover text-popover-foreground">📧 อีเมล (Email)</option>
+          <option value="visit" className="bg-popover text-popover-foreground">🏠 เยี่ยมชมหน้างาน (Site Visit)</option>
         </select>
       </div>
       <div>
-        <label className="block text-xs text-gray-600 mb-1">หมายเหตุ (ไม่บังคับ)</label>
+        <label className="block text-xs font-medium text-foreground mb-1">หมายเหตุ (ไม่บังคับ)</label>
         <input
           type="text"
           value={note}
-          onChange={e => setNote(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-          placeholder="..."
+          onChange={(e) => setNote(e.target.value)}
+          className="w-full border border-input bg-background rounded-lg px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
+          placeholder="เช่น โทรยืนยันใบเสนอราคา..."
         />
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      {success && <p className="text-xs text-green-600">✅ สร้าง Follow-up แล้ว</p>}
-      <button
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {success && (
+        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+          ✅ สร้างงานติดตาม (Follow-up) เรียบร้อยแล้ว
+        </p>
+      )}
+      <Button
         type="submit"
         disabled={isPending}
-        className="w-full py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        size="sm"
+        className="w-full shadow-xs"
       >
-        {isPending ? '...' : 'สร้าง Follow-up'}
-      </button>
+        <Calendar className="w-3.5 h-3.5" />
+        <span>{isPending ? 'กำลังบันทึก...' : 'สร้างงานติดตาม (Add Follow-up)'}</span>
+      </Button>
     </form>
   )
 }

@@ -2,7 +2,8 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react'
+import { ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface ArtifactKpiCardProps {
   label: string
@@ -15,6 +16,7 @@ export interface ArtifactKpiCardProps {
   icon?: React.ReactNode
   href?: string
   variant?: 'default' | 'alert' | 'warning' | 'success'
+  className?: string
 }
 
 export function ArtifactKpiCard({
@@ -25,6 +27,7 @@ export function ArtifactKpiCard({
   icon,
   href,
   variant = 'default',
+  className,
 }: ArtifactKpiCardProps) {
   const variantStyles = {
     default: 'bg-card text-card-foreground border-border hover:border-border/80',
@@ -42,21 +45,25 @@ export function ArtifactKpiCard({
 
   const cardContent = (
     <div
-      className={`group relative flex flex-col justify-between p-5 rounded-xl border transition-all duration-200 shadow-xs hover:shadow-subtle ${variantStyles[variant]}`}
+      className={cn(
+        'group relative flex flex-col justify-between p-5 rounded-2xl border transition-all duration-200 shadow-xs hover:shadow-subtle',
+        variantStyles[variant],
+        className
+      )}
     >
       <div className="flex items-center justify-between gap-2 mb-3">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider truncate">
           {label}
         </span>
         {icon && (
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted/60 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-muted rounded-lg bg-muted/60 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0">
             {icon}
           </div>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <div className={`text-2xl font-bold tracking-tight ${valueStyles[variant]}`}>
+        <div className={cn('text-2xl font-bold tracking-tight', valueStyles[variant])}>
           {value}
         </div>
 
@@ -64,16 +71,17 @@ export function ArtifactKpiCard({
           <div className="flex items-center gap-2 text-xs">
             {trend && (
               <span
-                className={`inline-flex items-center gap-0.5 font-medium px-1.5 py-0.5 rounded ${
+                className={cn(
+                  'inline-flex items-center gap-0.5 font-medium rounded-full px-2 py-0.5',
                   trend.positive
-                    ? 'text-emerald-700 bg-emerald-500/10 dark:text-emerald-400'
-                    : 'text-rose-700 bg-rose-500/10 dark:text-rose-400'
-                }`}
+                    ? 'text-emerald-700 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15'
+                    : 'text-rose-700 bg-rose-500/10 dark:text-rose-400 dark:bg-rose-500/15'
+                )}
               >
                 {trend.positive ? (
-                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  <ArrowUpRight className="size-3.5" />
                 ) : (
-                  <ArrowDownRight className="w-3.5 h-3.5" />
+                  <ArrowDownRight className="size-3.5" />
                 )}
                 {trend.value}
               </span>

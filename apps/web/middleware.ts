@@ -10,6 +10,8 @@ const RATE_LIMITS: Record<string, { windowMs: number; max: number }> = {
   '/api/line/': { windowMs: 60_000, max: 100 },
   '/api/portal/': { windowMs: 60_000, max: 20 },
   '/portal/': { windowMs: 60_000, max: 60 },
+  '/api/auth/otp': { windowMs: 60_000, max: 5 },
+  '/api/otp': { windowMs: 60_000, max: 5 },
 }
 
 function getRateLimitKey(ip: string, prefix: string): string {

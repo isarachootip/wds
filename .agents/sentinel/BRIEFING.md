@@ -1,13 +1,17 @@
-# BRIEFING — 2026-09-11T06:17:28Z
+# BRIEFING — 2026-09-14T04:18:00Z
 
 ## Mission
-Supervise and monitor the end-to-end design, SOW, system architecture, and technical specifications for the Omnichannel Lead to Delivery process for Wholesale & Direct Sales (WDS) via teamwork_preview_orchestrator.
+Supervise and monitor the redesign and modernization of Thai Watsadu WDS CRM and Sales Operations Web Application (apps/web) adopting the Cruip Artifact design system via teamwork_preview_orchestrator.
 
 ## 🔒 My Identity
 - Archetype: sentinel
 - Working directory: c:\atgv\wds\.agents\sentinel
 - Orchestrator: d3173c86-c11e-4f0b-8383-fd3e8a8a49be
 - Victory Auditor: 57499788-8e46-4924-971c-41ebeec65608
+- Active Orchestrator (Lead Management & CRM): 070f0692-34bb-41e1-bd5c-2b539de7e75d
+- Victory Auditor: [to be spawned on victory claim]
+- Active Orchestrator (Cruip Artifact Redesign): 52e2a916-7c16-4a6a-930a-1833376e67bc
+- Victory Auditor (Cruip Artifact Redesign): aeb2cdd3-99de-4977-b11a-a6b2d85c61eb
 
 ## 🔒 Key Constraints
 - No technical decisions — relay only
@@ -16,28 +20,29 @@ Supervise and monitor the end-to-end design, SOW, system architecture, and techn
 - Monitor orchestrator progress and liveness crons
 
 ## User Context
-- **Last user request**: Omnichannel Lead to Delivery (Inbound -> Lead -> Site Visit -> Branch A Quotation via E-ordering / Branch B Checkout -> Credit -> Payment -> Delivery) covering SOW (PM), Flexible Architecture (SA), and Technical Specs (Sr. Dev).
+- **Last user request**: Redesign and modernize Thai Watsadu WDS CRM and Sales Operations Web Application (`apps/web`) to fully adopt Cruip Artifact design system (collapsible sidebar, command palette, modern metric cards, rounded-2xl cards, status pills, /wds/dashboard, /wds/leads, /wds/leads/[id], /wds/pipeline, /login, brand harmonization red/navy, zero regression, clean pnpm build).
 - **Pending clarifications**: none
-- **Delivered results**: Complete Omnichannel Lead-to-Delivery architectural package (`docs/00_master_architecture_index.md`, `docs/01_sow_business_process_and_delivery_framework.md`, `docs/02_system_architecture_and_integration_blueprint.md`, `docs/03_technical_specifications_and_api_contracts.md`, `docs/README.md`, `PROJECT.md`, `README.md`), independently audited and confirmed with VICTORY CONFIRMED.
+- **Delivered results**: Cruip Artifact redesign complete across layout, tokens, screens, and workflows; production build passing; 100% independent Victory Audit CONFIRMED.
 
 ## Project Status
 - **Phase**: complete
-- **Orchestrator Conversation ID**: d3173c86-c11e-4f0b-8383-fd3e8a8a49be
-- **Active Crons**: none (cleaned up)
+- **Route Chosen**: General (`teamwork_preview_orchestrator`)
+- **Orchestrator Conversation ID**: 52e2a916-7c16-4a6a-930a-1833376e67bc
+- **Orchestrator Working Directory**: c:\atgv\wds\.agents\teamwork_preview_orchestrator_5
+- **Active Crons**: None (cleaned up)
 
 ## Victory Audit Status
 - **Triggered**: yes
+- **Auditor Conversation ID**: aeb2cdd3-99de-4977-b11a-a6b2d85c61eb
+- **Working directory**: c:\atgv\wds\.agents\teamwork_preview_victory_auditor_4
 - **Verdict**: VICTORY CONFIRMED
 - **Retry count**: 0
 
 ## Artifact Index
 - c:\atgv\wds\ORIGINAL_REQUEST.md — Verbatim original user request
 - c:\atgv\wds\.agents\ORIGINAL_REQUEST.md — Agent-level original user request
-- c:\atgv\wds\PROJECT.md — Master Project Blueprint (53.7 KB)
-- c:\atgv\wds\README.md — Master Public Repository Portal (31.7 KB)
-- c:\atgv\wds\docs\00_master_architecture_index.md — Master Architecture Index & Traceability (101.4 KB)
-- c:\atgv\wds\docs\01_sow_business_process_and_delivery_framework.md — SOW & Delivery Framework (118.7 KB)
-- c:\atgv\wds\docs\02_system_architecture_and_integration_blueprint.md — System Architecture & Integration Blueprint (104.3 KB)
-- c:\atgv\wds\docs\03_technical_specifications_and_api_contracts.md — Technical Specifications & API Contracts (133.9 KB)
-- c:\atgv\wds\docs\README.md — Unified Documentation Portal Navigation (21.7 KB)
-- c:\atgv\wds\.agents\teamwork_preview_victory_auditor_2\handoff.md — Independent Victory Audit Report (16.2 KB)
+- c:\atgv\wds\.agents\teamwork_preview_orchestrator_5\context.md — Context for orchestrator 5
+- c:\atgv\wds\.agents\teamwork_preview_orchestrator_5\handoff.md — Final orchestrator handoff report
+- c:\atgv\wds\.agents\teamwork_preview_orchestrator_5\GATE_STATUS.md — Full milestone gate status
+- c:\atgv\wds\.agents\teamwork_preview_victory_auditor_4\context.md — Context for Victory Auditor
+- c:\atgv\wds\.agents\teamwork_preview_victory_auditor_4\handoff.md — Victory Auditor final report

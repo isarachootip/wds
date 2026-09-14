@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, isNull, or, ilike } from 'drizzle-orm'
 import { getDb } from '@/lib/db'
 import { withTransaction } from '@/modules/shared/with-transaction'
 import { transition } from '@/lib/statemachine'
@@ -9,7 +9,7 @@ import { emit } from '@/lib/events'
 import { APPOINTMENT_MACHINE, JOB_MACHINE } from './appointment-machine'
 import {
   appointments, jobs, jobItems, jobPhotos, jobChecklists,
-  domainEvents, auditLog, siteVisits, teams
+  domainEvents, auditLog, siteVisits, teams, products
 } from '@wds/db'
 import { haversineDistance, FLAGGED_RADIUS_M } from '@/lib/geo'
 
@@ -355,5 +355,39 @@ export async function checkoutJobAction(
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด' }
+  }
+}
+
+export async function searchProductsAction(
+  query: string
+): Promise<{ success: boolean; products?: Array<{ id: string; sku: string; name: string; unit: string; basePriceSatang: number }>; error?: string }> {
+  try {
+    const trimmed = query.trim()
+    if (!trimmed) return { success: true, products: [] }
+
+    const db = getDb()
+    const found = await db
+      .select({
+        id: products.id,
+        sku: products.sku,
+        name: products.name,
+        unit: products.unit,
+        basePriceSatang: products.basePriceSatang,
+      })
+      .from(products)
+      .where(
+        and(
+          isNull(products.deletedAt),
+          or(
+            ilike(products.name, `%${trimmed}%`),
+            ilike(products.sku, `%${trimmed}%`)
+          )
+        )
+      )
+      .limit(10)
+
+    return { success: true, products: found }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'ค้นหาสินค้าไม่สำเร็จ' }
   }
 }

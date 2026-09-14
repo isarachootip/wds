@@ -56,9 +56,38 @@ export function WorkMode({
   const [newItemDesc, setNewItemDesc] = useState('')
   const [newItemQty, setNewItemQty] = useState('1')
   const [newItemPrice, setNewItemPrice] = useState('')
+  const [newItemUnit, setNewItemUnit] = useState('ชิ้น')
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; sku: string; name: string; unit: string; basePriceSatang: number }>>([])
   const [photoKind, setPhotoKind] = useState<'before' | 'during' | 'after' | 'issue'>('after')
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleSearchProducts(query: string) {
+    setNewItemDesc(query)
+    setSelectedProductId(null)
+    if (query.trim().length >= 2) {
+      try {
+        const { searchProductsAction } = await import('@/modules/visit/actions')
+        const res = await searchProductsAction(query)
+        if (res.success && res.products) {
+          setSearchResults(res.products)
+        }
+      } catch {
+        setSearchResults([])
+      }
+    } else {
+      setSearchResults([])
+    }
+  }
+
+  function handleSelectProduct(p: { id: string; name: string; unit: string; basePriceSatang: number }) {
+    setNewItemDesc(p.name)
+    setNewItemPrice((p.basePriceSatang / 100).toString())
+    setNewItemUnit(p.unit)
+    setSelectedProductId(p.id)
+    setSearchResults([])
+  }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -104,9 +133,10 @@ export function WorkMode({
     startTransition(async () => {
       const { addJobItemAction } = await import('@/modules/visit/actions')
       const result = await addJobItemAction(jobId, {
+        productId: selectedProductId ?? undefined,
         description: newItemDesc,
         qty: parseInt(newItemQty) || 1,
-        unit: 'ชิ้น',
+        unit: newItemUnit,
         unitPriceSatang: Math.round(priceBaht * 100),
       }, 'current-user-id')
       if (result.success) {
@@ -114,7 +144,7 @@ export function WorkMode({
           id: Date.now().toString(),
           description: newItemDesc,
           qty: parseInt(newItemQty) || 1,
-          unit: 'ชิ้น',
+          unit: newItemUnit,
           unitPriceSatang: Math.round(priceBaht * 100),
           source: 'added_onsite',
         }
@@ -124,6 +154,8 @@ export function WorkMode({
         setNewItemDesc('')
         setNewItemQty('1')
         setNewItemPrice('')
+        setNewItemUnit('ชิ้น')
+        setSelectedProductId(null)
       }
     })
   }
@@ -199,14 +231,37 @@ export function WorkMode({
 
             {/* Add item form */}
             <div className="border border-dashed border-gray-300 rounded-xl p-3 space-y-2">
-              <p className="text-xs font-medium text-gray-600">+ เพิ่มรายการ</p>
-              <input
-                type="text"
-                value={newItemDesc}
-                onChange={e => setNewItemDesc(e.target.value)}
-                placeholder="ชื่อรายการ/วัสดุ"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-              />
+              <p className="text-xs font-medium text-gray-600">+ เพิ่มรายการ (ค้นหาจากสินค้า/เพิ่มหน้างาน)</p>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={newItemDesc}
+                  onChange={e => handleSearchProducts(e.target.value)}
+                  placeholder="พิมพ์ค้นหาวัสดุหรือสินค้า (เช่น ปูน, กระเบื้อง)..."
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                />
+                {searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
+                    {searchResults.map(p => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleSelectProduct(p)}
+                        className="w-full text-left p-2.5 hover:bg-blue-50 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <p className="font-semibold text-gray-800">{p.name}</p>
+                          <p className="text-gray-400 font-mono text-[10px]">{p.sku}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="font-medium text-blue-600">฿{(p.basePriceSatang / 100).toLocaleString('th-TH')}</p>
+                          <p className="text-gray-400 text-[10px]">/{p.unit}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -215,6 +270,13 @@ export function WorkMode({
                   min="1"
                   className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   placeholder="จำนวน"
+                />
+                <input
+                  type="text"
+                  value={newItemUnit}
+                  onChange={e => setNewItemUnit(e.target.value)}
+                  className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  placeholder="หน่วย"
                 />
                 <input
                   type="number"
@@ -227,9 +289,9 @@ export function WorkMode({
               <button
                 onClick={handleAddItem}
                 disabled={isPending || !newItemDesc.trim()}
-                className="w-full py-2 bg-blue-600 text-white text-sm rounded-lg disabled:opacity-50"
+                className="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg disabled:opacity-50 hover:bg-blue-700 transition-colors"
               >
-                {isPending ? '...' : '+ เพิ่ม'}
+                {isPending ? 'กำลังเพิ่ม...' : '+ บันทึกรายการ (added_onsite)'}
               </button>
             </div>
           </div>
@@ -260,6 +322,8 @@ export function WorkMode({
                   <img
                     src={photo.storagePath}
                     alt={photo.kind}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 </div>

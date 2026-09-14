@@ -1,130 +1,583 @@
-﻿'use client'
+'use client'
 
-import { useState, useTransition } from 'react'
-import { updateLeadStatusAction } from '@/modules/crm/actions'
-import type { LeadCard } from './page'
+import React, { useState, useEffect, useTransition } from 'react'
+import {
+  MessageSquare,
+  Phone,
+  Store,
+  HelpCircle,
+  Globe,
+  Compass,
+  HardHat,
+  AlertCircle,
+  CheckCircle2,
+} from 'lucide-react'
+import {
+  updateLeadStatusAction,
+  closeLostLeadAction,
+  closeWinLeadAction,
+  LOST_REASONS,
+} from '@/modules/crm/actions'
+import { KanbanColumn } from './components/KanbanColumn'
+import { KanbanCard } from './components/KanbanCard'
+import { CloseLostModal } from './components/CloseLostModal'
+import { CloseWinModal } from './components/CloseWinModal'
 
-const STATUSES = ['new', 'contacted', 'qualified', 'site_visit_requested', 'quoted', 'won', 'lost'] as const
-type Status = typeof STATUSES[number]
+export const STATUSES = [
+  'new',
+  'contacted',
+  'qualified',
+  'site_visit_requested',
+  'quoted',
+  'won',
+  'lost',
+] as const
 
-const STATUS_LABELS: Record<Status, string> = {
+export type Status = (typeof STATUSES)[number]
+
+export const STATUS_LABELS: Record<Status, string> = {
   new: 'ใหม่',
   contacted: 'ติดต่อแล้ว',
-  qualified: 'ผ่านคุณสมบัติ',
-  site_visit_requested: 'ขอสำรวจ',
+  qualified: 'ผ่านเกณฑ์',
+  site_visit_requested: 'นัดสำรวจ',
   quoted: 'เสนอราคา',
-  won: '✅ ปิดการขาย',
-  lost: '❌ สูญเสีย',
+  won: 'ปิดการขาย',
+  lost: 'ไม่สำเร็จ',
 }
 
-const STATUS_COLORS: Record<Status, string> = {
-  new: 'bg-gray-50 border-gray-200',
-  contacted: 'bg-blue-50 border-blue-200',
-  qualified: 'bg-yellow-50 border-yellow-200',
-  site_visit_requested: 'bg-purple-50 border-purple-200',
-  quoted: 'bg-orange-50 border-orange-200',
-  won: 'bg-green-50 border-green-200',
-  lost: 'bg-red-50 border-red-200',
+export const STATUS_HEADER_STYLES: Record<
+  Status,
+  { bg: string; borderTop: string; badge: string; pill: string }
+> = {
+  new: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-blue-500',
+    badge: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+    pill: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  },
+  contacted: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-amber-500',
+    badge: 'bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20',
+    pill: 'bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20',
+  },
+  qualified: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-indigo-500',
+    badge: 'bg-indigo-500/10 text-indigo-800 dark:text-indigo-400 border-indigo-500/20',
+    pill: 'bg-indigo-500/10 text-indigo-800 dark:text-indigo-400 border-indigo-500/20',
+  },
+  site_visit_requested: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-purple-500',
+    badge: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
+    pill: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
+  },
+  quoted: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-cyan-500',
+    badge: 'bg-cyan-500/10 text-cyan-800 dark:text-cyan-400 border-cyan-500/20',
+    pill: 'bg-cyan-500/10 text-cyan-800 dark:text-cyan-400 border-cyan-500/20',
+  },
+  won: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-emerald-500',
+    badge: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20',
+    pill: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20',
+  },
+  lost: {
+    bg: 'bg-card border-border',
+    borderTop: 'border-t-rose-500',
+    badge: 'bg-rose-500/10 text-rose-800 dark:text-rose-400 border-rose-500/20',
+    pill: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+  },
 }
 
-function isStale(updatedAt: Date): boolean {
-  return Date.now() - new Date(updatedAt).getTime() > 7 * 24 * 60 * 60 * 1000
+export const LOST_REASON_OPTIONS = [
+  { value: 'PRICE_HIGH', label: 'ราคาสูงเกินไป / สู้ราคาไม่ไหว (Price too high)' },
+  { value: 'COMPETITOR_CHOSEN', label: 'เลือกคู่แข่ง / ซื้อเจ้าอื่น (Chose competitor)' },
+  { value: 'PROJECT_CANCELLED', label: 'ลูกค้ายกเลิก/ชะลอโครงการ (Project cancelled)' },
+  { value: 'UNREACHABLE', label: 'ติดต่อลูกค้าไม่ได้ / ขาดการติดต่อ (Unreachable)' },
+  { value: 'SPEC_MISMATCH', label: 'สเปกสินค้าไม่ตรงความต้องการ (Spec mismatch)' },
+  { value: 'BUDGET_INSUFFICIENT', label: 'งบประมาณไม่เพียงพอ (Budget insufficient)' },
+  { value: 'BELOW_WHOLESALE_THRESHOLD', label: 'ยอดสั่งซื้อต่ำกว่าเกณฑ์ขายส่ง (Below wholesale threshold)' },
+  { value: 'OTHER', label: 'อื่นๆ (Other reason)' },
+]
+
+export interface LeadCard {
+  id: string
+  status: string
+  source: string
+  channelRef?: string | null
+  customerName?: string | null
+  customerPhone?: string | null
+  company?: string | null
+  interest?: any
+  budgetRangeMinSatang?: number | null
+  budgetRangeMaxSatang?: number | null
+  dealValueSatang?: number | null
+  nextFollowUpDue?: string | Date | null
+  lostReason?: string | null
+  createdAt: Date | string
+  updatedAt: Date | string
+  score?: number | null
+  branch?: string | null
+  ownerId?: string | null
+  ownerName?: string | null
+  projectName?: string | null
 }
 
-export function KanbanBoard({ initialLeads }: { initialLeads: LeadCard[] }) {
-  const [leads, setLeads] = useState<LeadCard[]>(initialLeads)
+export interface KanbanBoardProps {
+  initialLeads?: LeadCard[]
+  leads?: LeadCard[]
+  onStatusChange?: (leadId: string, newStatus: string, lostReason?: string) => void
+}
+
+export function isStale(updatedAt: Date | string | null | undefined): boolean {
+  if (!updatedAt) return false
+  const time = new Date(updatedAt).getTime()
+  if (isNaN(time)) return false
+  return Date.now() - time > 7 * 24 * 60 * 60 * 1000
+}
+
+export function getLeadDealSatang(lead: LeadCard): number {
+  if (lead.dealValueSatang && lead.dealValueSatang > 0) return lead.dealValueSatang
+  if (lead.budgetRangeMaxSatang && lead.budgetRangeMaxSatang > 0) return lead.budgetRangeMaxSatang
+  if (lead.budgetRangeMinSatang && lead.budgetRangeMinSatang > 0) return lead.budgetRangeMinSatang
+  return 0
+}
+
+export function formatDealValue(satangAmount: number): string {
+  if (!satangAmount || satangAmount <= 0) return '฿0'
+  const baht = Math.round(satangAmount / 100)
+  return `฿${baht.toLocaleString('th-TH')}`
+}
+
+export function formatPhone(phone: string | null | undefined): string {
+  if (!phone) return ''
+  const cleaned = phone.replace(/\D/g, '')
+  if (cleaned.length === 10) {
+    return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+  }
+  if (cleaned.length === 9) {
+    return `${cleaned.slice(0, 2)}-${cleaned.slice(2, 5)}-${cleaned.slice(5)}`
+  }
+  return phone
+}
+
+export function formatShortDate(dateInput: Date | string | null | undefined): string {
+  if (!dateInput) return ''
+  const date = new Date(dateInput)
+  if (isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('th-TH', {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+export function isOverdue(dueDate: Date | string | null | undefined): boolean {
+  if (!dueDate) return false
+  const time = new Date(dueDate).getTime()
+  if (isNaN(time)) return false
+  return time < Date.now()
+}
+
+export function getInterestSnippet(interest: any): string {
+  if (!interest) return ''
+  if (typeof interest === 'string') return interest
+  if (typeof interest === 'object') {
+    if (interest.description && typeof interest.description === 'string') {
+      return interest.description
+    }
+    if (Array.isArray(interest.products) && interest.products.length > 0) {
+      return interest.products.join(', ')
+    }
+    if (interest.title && typeof interest.title === 'string') {
+      return interest.title
+    }
+  }
+  return ''
+}
+
+export function getSourceBadge(source: string) {
+  const normalized = (source || '').toLowerCase()
+  switch (normalized) {
+    case 'line':
+      return {
+        label: 'LINE OA',
+        icon: <MessageSquare className="size-3 text-emerald-600 dark:text-emerald-400" />,
+        style: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+      }
+    case 'phone':
+      return {
+        label: 'โทรศัพท์',
+        icon: <Phone className="size-3 text-blue-600 dark:text-blue-400" />,
+        style: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+      }
+    case 'store':
+    case 'walk_in':
+      return {
+        label: 'หน้าร้าน',
+        icon: <Store className="size-3 text-purple-600 dark:text-purple-400" />,
+        style: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
+      }
+    case 'web':
+      return {
+        label: 'เว็บไซต์ (Web)',
+        icon: <Globe className="size-3 text-indigo-600 dark:text-indigo-400" />,
+        style: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20',
+      }
+    case 'architect':
+      return {
+        label: 'สถาปนิก (Architect)',
+        icon: <Compass className="size-3 text-cyan-600 dark:text-cyan-400" />,
+        style: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20',
+      }
+    case 'subcontractor':
+      return {
+        label: 'ผู้รับเหมาช่วง (Subcontractor)',
+        icon: <HardHat className="size-3 text-amber-600 dark:text-amber-400" />,
+        style: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+      }
+    default:
+      return {
+        label: 'อื่นๆ',
+        icon: <HelpCircle className="size-3 text-muted-foreground" />,
+        style: 'bg-muted text-muted-foreground border-border',
+      }
+  }
+}
+
+export function KanbanBoard({
+  initialLeads = [],
+  leads: controlledLeads,
+  onStatusChange,
+}: KanbanBoardProps) {
+  const [internalLeads, setInternalLeads] = useState<LeadCard[]>(initialLeads)
   const [dragging, setDragging] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  // Lost Reason Modal State
+  const [pendingLostLead, setPendingLostLead] = useState<{
+    lead: LeadCard
+    fromStatus: string
+  } | null>(null)
+  const [selectedLostReason, setSelectedLostReason] = useState<string>('PRICE_HIGH')
+  const [lostNote, setLostNote] = useState('')
+  const [lostSubmitting, setLostSubmitting] = useState(false)
+  const [lostError, setLostError] = useState('')
+
+  // Close Win Modal State
+  const [pendingWinLead, setPendingWinLead] = useState<{
+    lead: LeadCard
+    fromStatus: string
+  } | null>(null)
+  const [winSubmitting, setWinSubmitting] = useState(false)
+  const [winError, setWinError] = useState('')
+
+  const [winSuccessToast, setWinSuccessToast] = useState<{
+    orderNumber?: string
+    creditStatus?: string
+  } | null>(null)
+
+  // Sync internal leads when controlledLeads or initialLeads changes
+  useEffect(() => {
+    if (controlledLeads) {
+      setInternalLeads(controlledLeads)
+    } else if (initialLeads) {
+      setInternalLeads(initialLeads)
+    }
+  }, [controlledLeads, initialLeads])
+
+  const activeLeads = controlledLeads ?? internalLeads
+
+  // Group leads by status (handling 'site_visit' synonym for 'site_visit_requested')
+  const byStatus = STATUSES.reduce<Record<Status, LeadCard[]>>(
+    (acc, s) => {
+      acc[s] = activeLeads.filter(l => {
+        if (s === 'site_visit_requested') {
+          return l.status === 'site_visit_requested' || l.status === 'site_visit'
+        }
+        return l.status === s
+      })
+      return acc
+    },
+    {} as Record<Status, LeadCard[]>
+  )
+
+  // Calculate stage deal sums
+  const stageSums = STATUSES.reduce<Record<Status, number>>(
+    (acc, s) => {
+      acc[s] = byStatus[s].reduce((sum, lead) => sum + getLeadDealSatang(lead), 0)
+      return acc
+    },
+    {} as Record<Status, number>
+  )
+
+  function initiateStageTransition(lead: LeadCard, fromStatus: string, newStatus: Status) {
+    if (fromStatus === newStatus) return
+
+    // Intercept drop to Lost: require mandatory reason modal
+    if (newStatus === 'lost') {
+      setPendingLostLead({ lead, fromStatus })
+      setSelectedLostReason('PRICE_HIGH')
+      setLostNote('')
+      setLostError('')
+      setDragging(null)
+      return
+    }
+
+    // Intercept drop to Won: require Close Win confirmation to trigger Sales Order creation & credit check
+    if (newStatus === 'won') {
+      setPendingWinLead({ lead, fromStatus })
+      setWinError('')
+      setDragging(null)
+      return
+    }
+
+    // Optimistic update
+    setInternalLeads(prev =>
+      prev.map(l => (l.id === lead.id ? { ...l, status: newStatus } : l))
+    )
+
+    startTransition(async () => {
+      const result = await updateLeadStatusAction(lead.id, newStatus, 'current-user-id')
+      if (!result.success) {
+        // Rollback
+        setInternalLeads(prev =>
+          prev.map(l => (l.id === lead.id ? { ...l, status: fromStatus } : l))
+        )
+        setError(result.error ?? 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ')
+        setTimeout(() => setError(''), 4000)
+      } else {
+        onStatusChange?.(lead.id, newStatus)
+      }
+    })
+    setDragging(null)
+  }
 
   async function handleDrop(e: React.DragEvent, newStatus: Status) {
     e.preventDefault()
     setDragOver(null)
     const leadId = e.dataTransfer.getData('leadId')
     const fromStatus = e.dataTransfer.getData('fromStatus') as Status
-    if (!leadId || fromStatus === newStatus) return
+    if (!leadId) {
+      setDragging(null)
+      return
+    }
 
-    // Optimistic update
-    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l))
+    const lead = activeLeads.find(l => l.id === leadId)
+    if (!lead) {
+      setDragging(null)
+      return
+    }
 
-    startTransition(async () => {
-      const result = await updateLeadStatusAction(leadId, newStatus, 'current-user-id')
-      if (!result.success) {
-        // Rollback
-        setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: fromStatus } : l))
-        setError(result.error ?? 'เกิดข้อผิดพลาด')
-        setTimeout(() => setError(''), 3000)
-      }
-    })
-    setDragging(null)
+    initiateStageTransition(lead, fromStatus, newStatus)
   }
 
-  const byStatus = STATUSES.reduce<Record<Status, LeadCard[]>>((acc, s) => {
-    acc[s] = leads.filter(l => l.status === s)
-    return acc
-  }, {} as Record<Status, LeadCard[]>)
+  async function handleConfirmCloseWin() {
+    if (!pendingWinLead) return
+
+    setWinSubmitting(true)
+    setWinError('')
+
+    try {
+      const result = await closeWinLeadAction({
+        leadId: pendingWinLead.lead.id,
+        actorId: 'current-user-id',
+      })
+
+      if (!result.success) {
+        setWinError(result.error ?? 'เกิดข้อผิดพลาดในการปิดการขาย')
+        setWinSubmitting(false)
+        return
+      }
+
+      // Optimistic update
+      setInternalLeads(prev =>
+        prev.map(l =>
+          l.id === pendingWinLead.lead.id
+            ? { ...l, status: 'won' }
+            : l
+        )
+      )
+
+      onStatusChange?.(pendingWinLead.lead.id, 'won')
+
+      const orderNumber = result.orderNumber
+      const creditStatus = result.creditStatus
+      setPendingWinLead(null)
+
+      setWinSuccessToast({
+        orderNumber,
+        creditStatus,
+      })
+      setTimeout(() => setWinSuccessToast(null), 6000)
+    } catch (err: any) {
+      setWinError(err.message ?? 'เกิดข้อผิดพลาดในการบันทึก')
+    } finally {
+      setWinSubmitting(false)
+    }
+  }
+
+  function handleCancelCloseWin() {
+    setPendingWinLead(null)
+    setWinError('')
+  }
+
+  async function handleConfirmCloseLost() {
+    if (!pendingLostLead) return
+    if (!selectedLostReason) {
+      setLostError('กรุณาเลือกเหตุผลการปิดการขายไม่สำเร็จ')
+      return
+    }
+
+    setLostSubmitting(true)
+    setLostError('')
+
+    try {
+      const result = await closeLostLeadAction({
+        leadId: pendingLostLead.lead.id,
+        lostReason: selectedLostReason,
+        note: lostNote.trim() || undefined,
+        actorId: 'current-user-id',
+      })
+
+      if (!result.success) {
+        setLostError(result.error ?? 'เกิดข้อผิดพลาดในการปิด Lead')
+        setLostSubmitting(false)
+        return
+      }
+
+      // Optimistic update
+      setInternalLeads(prev =>
+        prev.map(l =>
+          l.id === pendingLostLead.lead.id
+            ? { ...l, status: 'lost', lostReason: selectedLostReason }
+            : l
+        )
+      )
+
+      onStatusChange?.(pendingLostLead.lead.id, 'lost', selectedLostReason)
+      setPendingLostLead(null)
+      setLostNote('')
+      setSelectedLostReason('PRICE_HIGH')
+    } catch (err: any) {
+      setLostError(err.message ?? 'เกิดข้อผิดพลาดในการบันทึก')
+    } finally {
+      setLostSubmitting(false)
+    }
+  }
+
+  function handleCancelCloseLost() {
+    setPendingLostLead(null)
+    setLostNote('')
+    setLostError('')
+    setSelectedLostReason('PRICE_HIGH')
+  }
+
+  function handleMoveStageAccessible(leadId: string, newStage: Status) {
+    const lead = activeLeads.find(l => l.id === leadId)
+    if (!lead) return
+    initiateStageTransition(lead, lead.status, newStage)
+  }
 
   return (
     <>
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          {error}
+      {winSuccessToast && (
+        <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-sm text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>
+              ปิดการขายสำเร็จ! สร้าง Sales Order{' '}
+              <strong className="font-semibold text-foreground">
+                {winSuccessToast.orderNumber || 'เรียบร้อยแล้ว'}
+              </strong>
+              {winSuccessToast.creditStatus && ` (สถานะเครดิต: ${winSuccessToast.creditStatus})`}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWinSuccessToast(null)}
+            className="text-xs text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 font-semibold px-2.5 py-1 rounded-lg hover:bg-emerald-500/10 transition-colors ml-4"
+          >
+            ปิด
+          </button>
         </div>
       )}
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {STATUSES.map(status => (
-          <div
-            key={status}
-            className={`flex-shrink-0 w-56 rounded-xl border p-3 transition-colors ${
-              dragOver === status ? 'ring-2 ring-blue-400' : ''
-            } ${STATUS_COLORS[status]}`}
-            onDragOver={e => { e.preventDefault(); setDragOver(status) }}
-            onDragLeave={() => setDragOver(null)}
-            onDrop={e => handleDrop(e, status)}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold text-gray-700">{STATUS_LABELS[status]}</h3>
-              <span className="text-xs bg-white rounded-full px-2 py-0.5 text-gray-500 border">
-                {byStatus[status].length}
-              </span>
-            </div>
 
-            <div className="space-y-2 min-h-16">
-              {byStatus[status].map(lead => (
-                <div
-                  key={lead.id}
-                  draggable
-                  onDragStart={e => {
-                    e.dataTransfer.setData('leadId', lead.id)
-                    e.dataTransfer.setData('fromStatus', lead.status)
-                    setDragging(lead.id)
-                  }}
-                  onDragEnd={() => { setDragging(null); setDragOver(null) }}
-                  className={`bg-white rounded-lg p-3 shadow-sm border border-white cursor-grab active:cursor-grabbing transition-opacity ${
-                    dragging === lead.id ? 'opacity-40' : ''
-                  }`}
-                >
-                  <a href={`/wds/leads/${lead.id}`} onClick={e => e.stopPropagation()}>
-                    <p className="text-sm font-medium text-gray-800 truncate hover:text-blue-600">
-                      {lead.customerName ?? '(ไม่ระบุ)'}
-                    </p>
-                  </a>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-xs text-gray-400">{lead.source}</span>
-                    {isStale(lead.updatedAt) && status !== 'won' && status !== 'lost' && (
-                      <span className="text-xs text-red-500" title="ค้างนาน >7 วัน">⏰</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(lead.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      {error && (
+        <div className="mb-4 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-sm text-rose-700 dark:text-rose-400 flex items-center gap-2.5 shadow-xs">
+          <AlertCircle className="size-4 shrink-0 text-rose-600 dark:text-rose-400" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Kanban Board Container with 7 Stage Columns */}
+      <div className="flex gap-4 overflow-x-auto pb-6 pt-1 items-start min-h-[580px]">
+        {STATUSES.map(status => {
+          const leadsInStage = byStatus[status]
+          const stageTotal = stageSums[status]
+          const isTargetOver = dragOver === status
+
+          return (
+            <KanbanColumn
+              key={status}
+              status={status}
+              leads={leadsInStage}
+              stageTotal={stageTotal}
+              isTargetOver={isTargetOver}
+              draggingLeadId={dragging}
+              onDragOver={e => {
+                e.preventDefault()
+                if (dragOver !== status) setDragOver(status)
+              }}
+              onDragLeave={e => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setDragOver(null)
+                }
+              }}
+              onDrop={e => handleDrop(e, status)}
+              onDragStartCard={(e, lead) => {
+                e.dataTransfer.setData('leadId', lead.id)
+                e.dataTransfer.setData('fromStatus', lead.status)
+                setDragging(lead.id)
+              }}
+              onDragEndCard={() => {
+                setDragging(null)
+                setDragOver(null)
+              }}
+              onMoveStage={handleMoveStageAccessible}
+            />
+          )
+        })}
       </div>
+
+      {/* Close Lost Reason Modal */}
+      <CloseLostModal
+        pendingLead={pendingLostLead}
+        selectedReason={selectedLostReason}
+        onSelectReason={setSelectedLostReason}
+        note={lostNote}
+        onChangeNote={setLostNote}
+        error={lostError}
+        submitting={lostSubmitting}
+        onCancel={handleCancelCloseLost}
+        onConfirm={handleConfirmCloseLost}
+      />
+
+      {/* Close Win Confirmation Modal */}
+      <CloseWinModal
+        pendingLead={pendingWinLead}
+        error={winError}
+        submitting={winSubmitting}
+        onCancel={handleCancelCloseWin}
+        onConfirm={handleConfirmCloseWin}
+      />
     </>
   )
 }
+
+export { KanbanCard }

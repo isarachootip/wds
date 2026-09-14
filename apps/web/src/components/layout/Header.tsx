@@ -1,21 +1,20 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Menu,
+  PanelLeft,
   Search,
   Plus,
-  Bell,
   ChevronRight,
-  FileText,
-  Users,
   Building2,
-  CheckCircle2,
 } from 'lucide-react'
 import { CommandMenu } from './CommandMenu'
-import { NotificationBell } from '@/components/NotificationBell'
+import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { ThemeProvider, useTheme } from '@/components/theme/ThemeProvider'
+import { useSidebar } from './AppShell'
 
 const pathLabels: Record<string, string> = {
   wds: 'WDS Platform',
@@ -41,16 +40,54 @@ const pathLabels: Record<string, string> = {
   visit: 'Field Service',
 }
 
-interface HeaderProps {
-  onToggleMobileSidebar: () => void
+// Resilient wrapper: Provides an internal ThemeProvider if Header is rendered outside one (e.g. isolated test environments)
+function SafeThemeToggle() {
+  let hasProvider = false
+  try {
+    useTheme()
+    hasProvider = true
+  } catch {
+    hasProvider = false
+  }
+
+  if (!hasProvider) {
+    return (
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    )
+  }
+
+  return <ThemeToggle />
 }
 
-export function Header({ onToggleMobileSidebar }: HeaderProps) {
+export interface HeaderProps {
+  onToggleMobileSidebar?: () => void
+  onToggleDesktopSidebar?: () => void
+}
+
+export function Header({ onToggleMobileSidebar, onToggleDesktopSidebar }: HeaderProps) {
   const pathname = usePathname()
   const [isCommandOpen, setIsCommandOpen] = useState(false)
+  const sidebarContext = useSidebar()
 
-  // Generate breadcrumb items from URL
-  const segments = pathname.split('/').filter(Boolean)
+  const handleToggleMobile = onToggleMobileSidebar || sidebarContext.toggleMobileSidebar
+  const handleToggleDesktop = onToggleDesktopSidebar || sidebarContext.toggleSidebar
+  const isCollapsed = sidebarContext.isCollapsed
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setIsCommandOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Generate dynamic breadcrumb items from URL pathname
+  const segments = pathname ? pathname.split('/').filter(Boolean) : []
   const breadcrumbs = segments.map((seg, idx) => {
     const path = `/${segments.slice(0, idx + 1).join('/')}`
     const label = pathLabels[seg] || (seg.length > 8 ? `${seg.slice(0, 8)}...` : seg)
@@ -61,26 +98,42 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 sm:px-6 bg-background/80 backdrop-blur-md border-b border-border transition-colors">
-        {/* Left: Mobile Toggle & Breadcrumbs */}
+        {/* Left: Sidebar Collapse/Drawer Toggle & Dynamic Breadcrumbs */}
         <div className="flex items-center gap-3 min-w-0">
+          {/* Mobile Drawer Toggle (PanelLeft) */}
           <button
-            onClick={onToggleMobileSidebar}
+            type="button"
+            onClick={handleToggleMobile}
+            aria-expanded={Boolean(sidebarContext.isMobileOpen)}
             className="md:hidden p-2 -ml-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
             aria-label="Toggle navigation menu"
+            title="เปิดเมนูนำทาง (Navigation)"
           >
-            <Menu className="w-5 h-5" />
+            <PanelLeft className="w-5 h-5" />
           </button>
 
-          {/* Breadcrumbs */}
-          <nav className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
+          {/* Desktop Sidebar Collapse Toggle (PanelLeft) */}
+          <button
+            type="button"
+            onClick={handleToggleDesktop}
+            aria-expanded={!isCollapsed}
+            className="hidden md:inline-flex p-2 -ml-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+            aria-label="Toggle desktop sidebar"
+            title={isCollapsed ? 'ขยายแถบเมนู (Expand Sidebar)' : 'ย่อแถบเมนู (Collapse Sidebar)'}
+          >
+            <PanelLeft className="w-5 h-5" />
+          </button>
+
+          {/* Dynamic Breadcrumbs with clean Cruip Artifact typography */}
+          <nav className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground" aria-label="Breadcrumb">
             <Link
               href="/wds/dashboard"
               className="font-medium hover:text-foreground transition-colors flex items-center gap-1"
             >
-              <Building2 className="w-3.5 h-3.5" />
+              <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
               <span>WDS</span>
             </Link>
-            {breadcrumbs.map((bc, i) => (
+            {breadcrumbs.map((bc) => (
               <React.Fragment key={bc.path}>
                 <ChevronRight className="w-3 h-3 text-muted-foreground/50 shrink-0" />
                 {bc.isLast ? (
@@ -98,12 +151,14 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
           </nav>
         </div>
 
-        {/* Right: Search, Quick Action & User Center */}
+        {/* Right: Search, Quick Action, ThemeToggle, NotificationCenter & User Avatar */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Search Palette Trigger */}
+          {/* Command Palette Trigger Button (⌘K) */}
           <button
+            type="button"
             onClick={() => setIsCommandOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-muted/40 hover:bg-muted/80 text-xs text-muted-foreground hover:text-foreground transition-all shadow-xs"
+            aria-label="ค้นหาด่วน (Command palette)"
           >
             <Search className="w-3.5 h-3.5" />
             <span className="hidden md:inline">ค้นหาด่วน...</span>
@@ -123,21 +178,26 @@ export function Header({ onToggleMobileSidebar }: HeaderProps) {
             </Link>
           </div>
 
-          {/* Real-time Notification Bell */}
+          {/* Dark / Light Theme Toggle */}
+          <div className="flex items-center">
+            <SafeThemeToggle />
+          </div>
+
+          {/* Real-time Notification Bell with unread counter */}
           <div className="flex items-center">
             <NotificationBell />
           </div>
 
-          {/* User Status Tag */}
+          {/* User Profile Badge */}
           <div className="hidden md:flex items-center gap-2 pl-2 border-l border-border">
-            <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-              TW
+            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
+              AE
             </div>
           </div>
         </div>
       </header>
 
-      {/* Command Menu Modal */}
+      {/* Command Menu Modal Dialog */}
       <CommandMenu isOpen={isCommandOpen} onClose={() => setIsCommandOpen(false)} />
     </>
   )

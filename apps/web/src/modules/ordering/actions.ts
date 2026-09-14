@@ -95,6 +95,183 @@ export async function createQuotationFromJobAction(
   }
 }
 
+export interface CreateQuotationInput {
+  customerId: string
+  jobId?: string
+  leadId?: string
+  items: Array<{
+    productId?: string
+    description: string
+    qty: number
+    unit?: string
+    unitPriceSatang: number
+    discountSatang?: number
+  }>
+  billDiscountSatang?: number
+  vatRate?: number
+  vatMode?: 'exclusive' | 'inclusive'
+  terms?: string
+  note?: string
+  validDays?: number
+  actorId: string
+}
+
+export async function createQuotationAction(
+  input: CreateQuotationInput
+): Promise<{ success: boolean; quotationId?: string; error?: string }> {
+  try {
+    const db = getDb()
+    if (!input.customerId) throw new Error('ต้องระบุลูกค้า')
+    if (!input.items || input.items.length === 0) throw new Error('ต้องมีรายการสินค้าอย่างน้อย 1 รายการ')
+
+    const lineInputs = input.items.map(i => ({
+      qty: i.qty,
+      unitPriceSatang: i.unitPriceSatang,
+      discountSatang: i.discountSatang ?? 0,
+    }))
+
+    const calc = calculateQuotation(
+      lineInputs,
+      input.billDiscountSatang ?? 0,
+      input.vatRate ?? 7,
+      input.vatMode ?? 'exclusive'
+    )
+
+    const validDays = input.validDays ?? DEFAULT_VALID_DAYS
+    const validUntil = new Date()
+    validUntil.setDate(validUntil.getDate() + validDays)
+
+    const quotationId = await withTransaction(db, async (tx) => {
+      let qtNumber: string
+      try {
+        const [seqRes] = await tx.execute(sql`SELECT public.next_quotation_number() AS "qtNumber"`) as any
+        qtNumber = seqRes.qtNumber
+      } catch {
+        const now = new Date()
+        const ym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+        qtNumber = `QT-${ym}-${Math.floor(1000 + Math.random() * 9000)}`
+      }
+
+      const [qt] = await tx.insert(quotations).values({
+        number: qtNumber,
+        customerId: input.customerId,
+        jobId: input.jobId ?? undefined,
+        leadId: input.leadId ?? undefined,
+        status: 'draft',
+        validUntil,
+        subtotalSatang: calc.subtotalSatang,
+        billDiscountSatang: calc.billDiscountSatang,
+        vatRate: calc.vatRate,
+        vatMode: calc.vatMode,
+        vatAmountSatang: calc.vatAmountSatang,
+        totalSatang: calc.totalSatang,
+        terms: input.terms ?? 'ชำระเงินภายใน 30 วัน',
+        note: input.note ?? null,
+        createdBy: input.actorId,
+        updatedBy: input.actorId,
+      }).returning({ id: quotations.id })
+
+      for (let i = 0; i < input.items.length; i++) {
+        const item = input.items[i]
+        const line = calc.lines[i]
+        await tx.insert(quotationItems).values({
+          quotationId: qt.id,
+          productId: item.productId ?? undefined,
+          description: item.description,
+          qty: item.qty,
+          unit: item.unit ?? 'ชิ้น',
+          unitPriceSatang: item.unitPriceSatang,
+          discountSatang: item.discountSatang ?? 0,
+          amountSatang: line.amountSatang,
+          sort: i,
+        })
+      }
+
+      return qt.id
+    })
+
+    revalidatePath('/wds/quotations')
+    return { success: true, quotationId }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด' }
+  }
+}
+
+export async function reviseQuotationAction(
+  quotationId: string,
+  actorId: string
+): Promise<{ success: boolean; newQuotationId?: string; error?: string }> {
+  try {
+    const db = getDb()
+
+    const [oldQt] = await db.select().from(quotations)
+      .where(and(eq(quotations.id, quotationId), isNull(quotations.deletedAt)))
+
+    if (!oldQt) throw new Error('ไม่พบใบเสนอราคา')
+    if (oldQt.status === 'accepted') throw new Error('ใบเสนอราคานี้ได้รับการยอมรับแล้ว ไม่สามารถแก้ไขได้')
+
+    const oldItems = await db.select().from(quotationItems)
+      .where(and(eq(quotationItems.quotationId, quotationId), isNull(quotationItems.deletedAt)))
+
+    const newQuotationId = await withTransaction(db, async (tx) => {
+      let qtNumber: string
+      try {
+        const [seqRes] = await tx.execute(sql`SELECT public.next_quotation_number() AS "qtNumber"`) as any
+        qtNumber = seqRes.qtNumber
+      } catch {
+        const now = new Date()
+        const ym = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
+        qtNumber = `QT-${ym}-${Math.floor(1000 + Math.random() * 9000)}`
+      }
+
+      const nextVersion = (oldQt.version || 1) + 1
+
+      const [newQt] = await tx.insert(quotations).values({
+        number: qtNumber,
+        customerId: oldQt.customerId,
+        jobId: oldQt.jobId,
+        leadId: oldQt.leadId,
+        status: 'draft',
+        validUntil: oldQt.validUntil,
+        subtotalSatang: oldQt.subtotalSatang,
+        billDiscountSatang: oldQt.billDiscountSatang,
+        vatRate: oldQt.vatRate,
+        vatMode: oldQt.vatMode,
+        vatAmountSatang: oldQt.vatAmountSatang,
+        totalSatang: oldQt.totalSatang,
+        terms: oldQt.terms,
+        note: oldQt.note,
+        version: nextVersion,
+        supersedesId: oldQt.id,
+        createdBy: actorId,
+        updatedBy: actorId,
+      }).returning({ id: quotations.id })
+
+      for (let i = 0; i < oldItems.length; i++) {
+        const item = oldItems[i]
+        await tx.insert(quotationItems).values({
+          quotationId: newQt.id,
+          productId: item.productId,
+          description: item.description,
+          qty: item.qty,
+          unit: item.unit,
+          unitPriceSatang: item.unitPriceSatang,
+          discountSatang: item.discountSatang,
+          amountSatang: item.amountSatang,
+          sort: item.sort,
+        })
+      }
+
+      return newQt.id
+    })
+
+    revalidatePath('/wds/quotations')
+    return { success: true, newQuotationId }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด' }
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Send QT (generate public_token, set status=sent)
 // ─────────────────────────────────────────────────────────────────────────────
