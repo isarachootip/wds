@@ -1,5 +1,16 @@
-﻿import { createDb, customers, addresses, products, leads, quotations, quotationItems, orders, deliveries, siteVisits, followUps } from '../index'
+import { existsSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { createDb, customers, addresses, products, leads, quotations, quotationItems, orders, deliveries, siteVisits, followUps } from '../index'
 import { count } from 'drizzle-orm'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const envPath = resolve(__dirname, '../../../.env')
+if (existsSync(envPath) && typeof process.loadEnvFile === 'function') {
+  try {
+    process.loadEnvFile(envPath)
+  } catch {}
+}
 
 const dbUrl =
   process.env.DATABASE_URL ||
