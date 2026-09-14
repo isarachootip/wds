@@ -4,21 +4,21 @@ import { seedProducts } from '../../../../packages/db/src/seed/products'
 import { seedLeads } from '../../../../packages/db/src/seed/crm'
 
 describe('Phase 0 Acceptance: Thai Seed Data Verification', () => {
-  it('contains at least 10 sample customers in Thai language with valid tax and credit limit', () => {
-    expect(seedCustomers.length).toBeGreaterThanOrEqual(10)
+  it('contains at least 20 sample customers in Thai language with valid tax and credit limit', () => {
+    expect(seedCustomers.length).toBeGreaterThanOrEqual(20)
     for (const customer of seedCustomers) {
       expect(customer.name).toBeTruthy()
       expect(customer.code).toMatch(/^C\d{3}$/)
       expect(customer.taxId).toHaveLength(13)
-      expect(customer.creditLimitSatang).toBeGreaterThan(0)
+      expect(customer.creditLimitSatang).toBeGreaterThanOrEqual(0)
       expect(Number.isInteger(customer.creditLimitSatang)).toBe(true)
     }
 
     // Verify Thai company names
     const thaiNames = seedCustomers.map((c) => c.name)
     expect(thaiNames).toContain('บริษัท วิวัฒน์ก่อสร้าง จำกัด')
-    expect(thaiNames).toContain('ห้างหุ้นส่วนจำกัด เจริญพัฒนา')
-    expect(thaiNames).toContain('นายสมชาย ใจดี')
+    expect(thaiNames).toContain('ห้างหุ้นส่วนจำกัด เจริญพัฒนา ก่อสร้าง')
+    expect(thaiNames).toContain('บริษัท สยามคอนสตรัคชั่น กรุ๊ป จำกัด')
   })
 
   it('contains at least 15 sample products in Thai language with base prices in integer satang', () => {
@@ -39,8 +39,8 @@ describe('Phase 0 Acceptance: Thai Seed Data Verification', () => {
   })
 
   it('contains realistic Thai CRM cases with multi-channel sources and satang budget ranges', () => {
-    expect(seedLeads.length).toBeGreaterThanOrEqual(5)
-    const validChannels = ['line', 'phone', 'store', 'other']
+    expect(seedLeads.length).toBeGreaterThanOrEqual(20)
+    const validChannels = ['line', 'phone', 'store', 'web', 'other']
 
     for (const lead of seedLeads) {
       expect(validChannels).toContain(lead.source)

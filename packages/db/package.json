@@ -11,6 +11,9 @@
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
+    "push": "drizzle-kit push",
+    "seed": "npx tsx src/seed/run.ts",
+    "verify": "npx tsx src/seed/verify.ts",
     "studio": "drizzle-kit studio"
   },
   "dependencies": {

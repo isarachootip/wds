@@ -21,14 +21,14 @@ export async function GET() {
       success: true,
       message: 'Successfully populated Thai Watsadu WDS sample seed data!',
       details: {
-        customers: 10,
+        customers: 20,
         products: 15,
-        leads: 6,
-        followUps: 3,
-        siteVisits: 2,
-        quotations: 3,
-        orders: 2,
-        deliveries: 2,
+        leads: 20,
+        followUps: 6,
+        siteVisits: 5,
+        quotations: 11,
+        orders: 6,
+        deliveries: 6,
       },
     })
   } catch (error: any) {
