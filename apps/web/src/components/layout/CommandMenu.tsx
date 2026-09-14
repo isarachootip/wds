@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ShieldCheck,
   CornerDownLeft,
+  MessageSquare,
 } from 'lucide-react'
 
 export interface CommandItem {
@@ -163,6 +164,14 @@ export const defaultCommands: CommandItem[] = [
     href: '/wds/admin/events',
     category: 'ระบบ & ความปลอดภัย',
     icon: <Settings className="w-4 h-4" />,
+  },
+  {
+    id: 'line-settings',
+    title: 'ตั้งค่าระบบ & LINE Official Account',
+    subtitle: 'กำหนดค่า LINE Messaging API, Webhook และ LIFF App',
+    href: '/wds/admin/settings',
+    category: 'ระบบ & ความปลอดภัย',
+    icon: <MessageSquare className="w-4 h-4 text-[#06C755]" />,
   },
 ]
 

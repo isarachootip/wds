@@ -21,6 +21,7 @@ import {
   LogOut,
   ExternalLink,
   Layers,
+  MessageSquare,
 } from 'lucide-react'
 import { logout } from '@/app/(auth)/login/actions'
 import { useSidebar } from './AppShell'
@@ -147,13 +148,18 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Governance',
+    label: 'Governance & Settings',
     defaultOpen: false,
     items: [
       {
         title: 'Audit Logs (Event Store)',
         href: '/wds/admin/events',
         icon: <Settings className="w-4 h-4 shrink-0" />,
+      },
+      {
+        title: 'ตั้งค่าระบบ & LINE OA',
+        href: '/wds/admin/settings',
+        icon: <MessageSquare className="w-4 h-4 shrink-0 text-[#06C755]" />,
       },
     ],
   },

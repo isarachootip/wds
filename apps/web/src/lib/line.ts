@@ -1,8 +1,121 @@
-/**
- * LINE OA Utilities — pure functions + API helpers
- * ENV: LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN
- */
 import { createHmac } from 'crypto'
+import { getDb } from '@/lib/db'
+import { systemSettings } from '@wds/db'
+import { eq } from 'drizzle-orm'
+
+export interface LineConfig {
+  channelSecret: string
+  channelAccessToken: string
+  liffId: string
+  botName?: string
+  botPictureUrl?: string
+  botBasicId?: string
+  updatedAt?: string
+}
+
+let cachedLineConfig: LineConfig | null = null
+let cacheExpiresAt = 0
+
+/**
+ * Fetch effective LINE OA configuration:
+ * 1. Checks `system_settings` table where key = 'line_config'
+ * 2. Fallbacks to process.env (LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LIFF_ID)
+ */
+export async function getEffectiveLineConfig(): Promise<LineConfig> {
+  const now = Date.now()
+  if (cachedLineConfig && now < cacheExpiresAt) {
+    return cachedLineConfig
+  }
+
+  let dbConfig: Partial<LineConfig> = {}
+  try {
+    const db = getDb()
+    const [row] = await db
+      .select({ value: systemSettings.value })
+      .from(systemSettings)
+      .where(eq(systemSettings.key, 'line_config'))
+      .limit(1)
+
+    if (row?.value && typeof row.value === 'object') {
+      dbConfig = row.value as Partial<LineConfig>
+    }
+  } catch {
+    // If DB is unreachable or table not migrated yet, fallback silently
+  }
+
+  const effective: LineConfig = {
+    channelSecret: dbConfig.channelSecret || process.env.LINE_CHANNEL_SECRET || '',
+    channelAccessToken: dbConfig.channelAccessToken || process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
+    liffId: dbConfig.liffId || process.env.LIFF_ID || '',
+    botName: dbConfig.botName,
+    botPictureUrl: dbConfig.botPictureUrl,
+    botBasicId: dbConfig.botBasicId,
+    updatedAt: dbConfig.updatedAt,
+  }
+
+  cachedLineConfig = effective
+  cacheExpiresAt = now + 30_000 // Cache for 30s
+  return effective
+}
+
+export function invalidateLineConfigCache() {
+  cachedLineConfig = null
+  cacheExpiresAt = 0
+}
+
+/**
+ * Test connection to LINE Messaging API by fetching Bot Profile
+ */
+export async function testLineBotConnection(token: string): Promise<{
+  success: boolean
+  bot?: {
+    userId: string
+    basicId: string
+    displayName: string
+    pictureUrl?: string
+    chatMode: string
+    markAsReadMode: string
+  }
+  error?: string
+}> {
+  if (!token?.trim()) {
+    return { success: false, error: 'Channel Access Token is required' }
+  }
+
+  try {
+    const res = await fetch('https://api.line.me/v2/bot/info', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token.trim()}`,
+      },
+    })
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      let message = `LINE API Error (${res.status})`
+      try {
+        const json = JSON.parse(errorText)
+        if (json.message) message = json.message
+      } catch {}
+      return { success: false, error: message }
+    }
+
+    const data = await res.json()
+    return {
+      success: true,
+      bot: {
+        userId: data.userId,
+        basicId: data.basicId,
+        displayName: data.displayName,
+        pictureUrl: data.pictureUrl,
+        chatMode: data.chatMode,
+        markAsReadMode: data.markAsReadMode,
+      },
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || 'Failed to connect to LINE API' }
+  }
+}
 
 // ─── Signature Verification ────────────────────────────────────────────────
 /**
@@ -30,9 +143,10 @@ export async function sendLineMessage(
   userId: string,
   messages: object[]
 ): Promise<boolean> {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
+  const config = await getEffectiveLineConfig()
+  const token = config.channelAccessToken
   if (!token) {
-    console.warn('[LINE] LINE_CHANNEL_ACCESS_TOKEN not set')
+    console.warn('[LINE] LINE_CHANNEL_ACCESS_TOKEN not configured in DB or ENV')
     return false
   }
   try {
@@ -61,7 +175,8 @@ export async function replyLineMessage(
   replyToken: string,
   messages: object[]
 ): Promise<boolean> {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
+  const config = await getEffectiveLineConfig()
+  const token = config.channelAccessToken
   if (!token) return false
   try {
     const res = await fetch(`${LINE_API_BASE}/message/reply`, {
@@ -75,6 +190,7 @@ export async function replyLineMessage(
     return res.ok
   } catch { return false }
 }
+
 
 // ─── Flex Message Factories ────────────────────────────────────────────────
 

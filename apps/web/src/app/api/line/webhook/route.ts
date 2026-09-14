@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyLineSignature } from '@/lib/line'
+import { verifyLineSignature, getEffectiveLineConfig } from '@/lib/line'
 import { getDb } from '@/lib/db'
 import { leads, leadActivities, followUps } from '@wds/db'
 import { eq, and, isNull } from 'drizzle-orm'
@@ -13,13 +13,15 @@ export async function POST(request: NextRequest) {
   // 1. Read raw body — MUST be done before any parsing
   const rawBody = await request.text()
   const signature = request.headers.get('x-line-signature') ?? ''
-  const channelSecret = process.env.LINE_CHANNEL_SECRET ?? ''
+  const lineConfig = await getEffectiveLineConfig()
+  const channelSecret = lineConfig.channelSecret
 
-  // 2. Verify signature — fail fast, no DB access
+  // 2. Verify signature — fail fast
   if (!verifyLineSignature(rawBody, signature, channelSecret)) {
     console.warn('[LINE Webhook] Invalid signature rejected')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
 
   // 3. Parse events
   let body: { events?: LineEvent[] }

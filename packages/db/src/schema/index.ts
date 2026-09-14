@@ -6,3 +6,5 @@ export * from './crm'
 export * from './visit'
 export * from './ordering'
 export * from './billing'
+export * from './settings'
+
