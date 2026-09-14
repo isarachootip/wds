@@ -498,6 +498,31 @@ ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS pod_path text;
 ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS receiver_name varchar(200);
 ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS customer_signature_path text;
 ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS fail_reason text;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'quotation_items' AND column_name = 'total_satang') THEN
+    ALTER TABLE quotation_items DROP COLUMN IF EXISTS total_satang;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'quotation_items' AND column_name = 'quantity') THEN
+    ALTER TABLE quotation_items DROP COLUMN IF EXISTS quantity;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'deliveries' AND column_name = 'tracking_number') THEN
+    ALTER TABLE deliveries DROP COLUMN IF EXISTS tracking_number;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'deliveries' AND column_name = 'carrier') THEN
+    ALTER TABLE deliveries DROP COLUMN IF EXISTS carrier;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'deliveries' AND column_name = 'notes') THEN
+    ALTER TABLE deliveries DROP COLUMN IF EXISTS notes;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'deliveries' AND column_name = 'number') THEN
+    ALTER TABLE deliveries DROP COLUMN IF EXISTS number;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'deliveries' AND column_name = 'recipient_phone') THEN
+    ALTER TABLE deliveries DROP COLUMN IF EXISTS recipient_phone;
+  END IF;
+END $$;
 `
 
 export async function runSeed(dbUrl: string) {
