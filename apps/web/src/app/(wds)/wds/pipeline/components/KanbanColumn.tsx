@@ -53,13 +53,13 @@ export function KanbanColumn({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      {/* Modern Column Header */}
-      <div className="mb-3.5 bg-card rounded-xl p-3 border border-border shadow-2xs">
+      {/* Modern Column Header with High-Contrast Typography */}
+      <div className="mb-3.5 bg-card rounded-2xl p-3.5 border border-border shadow-2xs">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border shadow-2xs',
+                'inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-bold border shadow-2xs',
                 styles.pill
               )}
             >
@@ -69,7 +69,7 @@ export function KanbanColumn({
 
           <span
             className={cn(
-              'text-xs px-2 py-0.5 rounded-full font-semibold border tabular-nums',
+              'text-xs px-2.5 py-0.5 rounded-full font-bold border tabular-nums',
               styles.badge
             )}
           >
@@ -78,9 +78,11 @@ export function KanbanColumn({
         </div>
 
         {/* Total Sum Aggregation via satangToBaht */}
-        <div className="mt-2 pt-2 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-          <span>มูลค่ารวม:</span>
-          <span className="font-bold text-foreground font-mono tabular-nums">
+        <div className="mt-2.5 pt-2.5 border-t border-border flex items-baseline justify-between gap-2">
+          <span className="text-xs font-bold text-muted-foreground shrink-0">
+            มูลค่ารวม:
+          </span>
+          <span className="font-black text-foreground font-mono text-base sm:text-lg tabular-nums tracking-tight text-right">
             ฿{satangToBaht(stageTotal)}
           </span>
         </div>

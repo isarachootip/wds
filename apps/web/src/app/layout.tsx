@@ -16,9 +16,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="th" suppressHydrationWarning>
+    <html lang="th" suppressHydrationWarning className="light">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');localStorage.setItem('wds-theme','light');}catch(e){}`,
+          }}
+        />
+      </head>
       <body className={inter.className}>
-        <ThemeProvider defaultTheme="system" storageKey="wds-theme">
+        <ThemeProvider defaultTheme="light" storageKey="wds-theme">
           {children}
         </ThemeProvider>
       </body>

@@ -11,6 +11,8 @@ import {
   HardHat,
   AlertCircle,
   CheckCircle2,
+  LayoutGrid,
+  List,
 } from 'lucide-react'
 import {
   updateLeadStatusAction,
@@ -20,8 +22,10 @@ import {
 } from '@/modules/crm/actions'
 import { KanbanColumn } from './components/KanbanColumn'
 import { KanbanCard } from './components/KanbanCard'
+import { PipelineListView } from './components/PipelineListView'
 import { CloseLostModal } from './components/CloseLostModal'
 import { CloseWinModal } from './components/CloseWinModal'
+import { cn } from '@/lib/utils'
 
 export const STATUSES = [
   'new',
@@ -51,45 +55,45 @@ export const STATUS_HEADER_STYLES: Record<
 > = {
   new: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-blue-500',
-    badge: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
-    pill: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+    borderTop: 'border-t-blue-600',
+    badge: 'bg-blue-100 text-blue-950 font-bold dark:bg-blue-950/80 dark:text-blue-200 border-blue-300 dark:border-blue-700',
+    pill: 'bg-blue-100 text-blue-950 font-bold dark:bg-blue-950/80 dark:text-blue-200 border-blue-300 dark:border-blue-700',
   },
   contacted: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-amber-500',
-    badge: 'bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20',
-    pill: 'bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20',
+    borderTop: 'border-t-amber-600',
+    badge: 'bg-amber-100 text-amber-950 font-bold dark:bg-amber-950/80 dark:text-amber-200 border-amber-300 dark:border-amber-700',
+    pill: 'bg-amber-100 text-amber-950 font-bold dark:bg-amber-950/80 dark:text-amber-200 border-amber-300 dark:border-amber-700',
   },
   qualified: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-indigo-500',
-    badge: 'bg-indigo-500/10 text-indigo-800 dark:text-indigo-400 border-indigo-500/20',
-    pill: 'bg-indigo-500/10 text-indigo-800 dark:text-indigo-400 border-indigo-500/20',
+    borderTop: 'border-t-indigo-600',
+    badge: 'bg-indigo-100 text-indigo-950 font-bold dark:bg-indigo-950/80 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700',
+    pill: 'bg-indigo-100 text-indigo-950 font-bold dark:bg-indigo-950/80 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700',
   },
   site_visit_requested: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-purple-500',
-    badge: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
-    pill: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
+    borderTop: 'border-t-purple-600',
+    badge: 'bg-purple-100 text-purple-950 font-bold dark:bg-purple-950/80 dark:text-purple-200 border-purple-300 dark:border-purple-700',
+    pill: 'bg-purple-100 text-purple-950 font-bold dark:bg-purple-950/80 dark:text-purple-200 border-purple-300 dark:border-purple-700',
   },
   quoted: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-cyan-500',
-    badge: 'bg-cyan-500/10 text-cyan-800 dark:text-cyan-400 border-cyan-500/20',
-    pill: 'bg-cyan-500/10 text-cyan-800 dark:text-cyan-400 border-cyan-500/20',
+    borderTop: 'border-t-cyan-600',
+    badge: 'bg-cyan-100 text-cyan-950 font-bold dark:bg-cyan-950/80 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700',
+    pill: 'bg-cyan-100 text-cyan-950 font-bold dark:bg-cyan-950/80 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700',
   },
   won: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-emerald-500',
-    badge: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20',
-    pill: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-500/20',
+    borderTop: 'border-t-emerald-600',
+    badge: 'bg-emerald-100 text-emerald-950 font-bold dark:bg-emerald-950/80 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700',
+    pill: 'bg-emerald-100 text-emerald-950 font-bold dark:bg-emerald-950/80 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700',
   },
   lost: {
     bg: 'bg-card border-border',
-    borderTop: 'border-t-rose-500',
-    badge: 'bg-rose-500/10 text-rose-800 dark:text-rose-400 border-rose-500/20',
-    pill: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20',
+    borderTop: 'border-t-rose-600',
+    badge: 'bg-rose-100 text-rose-950 font-bold dark:bg-rose-950/80 dark:text-rose-200 border-rose-300 dark:border-rose-700',
+    pill: 'bg-rose-100 text-rose-950 font-bold dark:bg-rose-950/80 dark:text-rose-200 border-rose-300 dark:border-rose-700',
   },
 }
 
@@ -130,6 +134,10 @@ export interface LeadCard {
 export interface KanbanBoardProps {
   initialLeads?: LeadCard[]
   leads?: LeadCard[]
+  initialView?: 'kanban' | 'list'
+  view?: 'kanban' | 'list'
+  onViewChange?: (view: 'kanban' | 'list') => void
+  showViewToggle?: boolean
   onStatusChange?: (leadId: string, newStatus: string, lostReason?: string) => void
 }
 
@@ -205,45 +213,45 @@ export function getSourceBadge(source: string) {
     case 'line':
       return {
         label: 'LINE OA',
-        icon: <MessageSquare className="size-3 text-emerald-600 dark:text-emerald-400" />,
-        style: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+        icon: <MessageSquare className="size-3.5 text-emerald-700 dark:text-emerald-400 shrink-0" />,
+        style: 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700 font-bold',
       }
     case 'phone':
       return {
         label: 'โทรศัพท์',
-        icon: <Phone className="size-3 text-blue-600 dark:text-blue-400" />,
-        style: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+        icon: <Phone className="size-3.5 text-blue-700 dark:text-blue-400 shrink-0" />,
+        style: 'bg-blue-100 text-blue-950 dark:bg-blue-950/80 dark:text-blue-200 border-blue-300 dark:border-blue-700 font-bold',
       }
     case 'store':
     case 'walk_in':
       return {
         label: 'หน้าร้าน',
-        icon: <Store className="size-3 text-purple-600 dark:text-purple-400" />,
-        style: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20',
+        icon: <Store className="size-3.5 text-purple-700 dark:text-purple-400 shrink-0" />,
+        style: 'bg-purple-100 text-purple-950 dark:bg-purple-950/80 dark:text-purple-200 border-purple-300 dark:border-purple-700 font-bold',
       }
     case 'web':
       return {
         label: 'เว็บไซต์ (Web)',
-        icon: <Globe className="size-3 text-indigo-600 dark:text-indigo-400" />,
-        style: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20',
+        icon: <Globe className="size-3.5 text-indigo-700 dark:text-indigo-400 shrink-0" />,
+        style: 'bg-indigo-100 text-indigo-950 dark:bg-indigo-950/80 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700 font-bold',
       }
     case 'architect':
       return {
         label: 'สถาปนิก (Architect)',
-        icon: <Compass className="size-3 text-cyan-600 dark:text-cyan-400" />,
-        style: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20',
+        icon: <Compass className="size-3.5 text-cyan-700 dark:text-cyan-400 shrink-0" />,
+        style: 'bg-cyan-100 text-cyan-950 dark:bg-cyan-950/80 dark:text-cyan-200 border-cyan-300 dark:border-cyan-700 font-bold',
       }
     case 'subcontractor':
       return {
         label: 'ผู้รับเหมาช่วง (Subcontractor)',
-        icon: <HardHat className="size-3 text-amber-600 dark:text-amber-400" />,
-        style: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+        icon: <HardHat className="size-3.5 text-amber-700 dark:text-amber-400 shrink-0" />,
+        style: 'bg-amber-100 text-amber-950 dark:bg-amber-950/80 dark:text-amber-200 border-amber-300 dark:border-amber-700 font-bold',
       }
     default:
       return {
         label: 'อื่นๆ',
-        icon: <HelpCircle className="size-3 text-muted-foreground" />,
-        style: 'bg-muted text-muted-foreground border-border',
+        icon: <HelpCircle className="size-3.5 text-muted-foreground shrink-0" />,
+        style: 'bg-muted text-foreground border-border font-bold',
       }
   }
 }
@@ -251,13 +259,25 @@ export function getSourceBadge(source: string) {
 export function KanbanBoard({
   initialLeads = [],
   leads: controlledLeads,
+  initialView = 'kanban',
+  view: controlledView,
+  onViewChange,
+  showViewToggle = true,
   onStatusChange,
 }: KanbanBoardProps) {
   const [internalLeads, setInternalLeads] = useState<LeadCard[]>(initialLeads)
+  const [internalView, setInternalView] = useState<'kanban' | 'list'>(initialView)
   const [dragging, setDragging] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  const currentView = controlledView ?? internalView
+
+  function handleViewChange(v: 'kanban' | 'list') {
+    setInternalView(v)
+    onViewChange?.(v)
+  }
 
   // Lost Reason Modal State
   const [pendingLostLead, setPendingLostLead] = useState<{
@@ -486,6 +506,44 @@ export function KanbanBoard({
 
   return (
     <>
+      {/* View Switcher Toolbar */}
+      {showViewToggle && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-card p-3 rounded-2xl border border-border shadow-2xs">
+          <div className="inline-flex items-center p-1 rounded-xl bg-muted/60 border border-border">
+            <button
+              type="button"
+              onClick={() => handleViewChange('kanban')}
+              className={cn(
+                'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all select-none',
+                currentView === 'kanban'
+                  ? 'bg-card text-foreground shadow-xs border border-border'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <LayoutGrid className="size-3.5" />
+              <span>การ์ด (Card / Kanban)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewChange('list')}
+              className={cn(
+                'inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all select-none',
+                currentView === 'list'
+                  ? 'bg-card text-foreground shadow-xs border border-border'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <List className="size-3.5" />
+              <span>รายการ (List / Table)</span>
+            </button>
+          </div>
+
+          <div className="text-xs font-bold text-muted-foreground">
+            โหมดการแสดงผล: {currentView === 'kanban' ? 'กระดานการ์ด (Kanban)' : 'ตารางรายการ (List)'}
+          </div>
+        </div>
+      )}
+
       {winSuccessToast && (
         <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-sm text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-xs animate-in fade-in duration-200">
           <div className="flex items-center gap-2.5">
@@ -515,45 +573,55 @@ export function KanbanBoard({
         </div>
       )}
 
-      {/* Kanban Board Container with 7 Stage Columns */}
-      <div className="flex gap-4 overflow-x-auto pb-6 pt-1 items-start min-h-[580px]">
-        {STATUSES.map(status => {
-          const leadsInStage = byStatus[status]
-          const stageTotal = stageSums[status]
-          const isTargetOver = dragOver === status
+      {currentView === 'kanban' ? (
+        /* Kanban Board Container with 7 Stage Columns */
+        <div className="flex gap-4 overflow-x-auto pb-6 pt-1 items-start min-h-[580px]">
+          {STATUSES.map(status => {
+            const leadsInStage = byStatus[status]
+            const stageTotal = stageSums[status]
+            const isTargetOver = dragOver === status
 
-          return (
-            <KanbanColumn
-              key={status}
-              status={status}
-              leads={leadsInStage}
-              stageTotal={stageTotal}
-              isTargetOver={isTargetOver}
-              draggingLeadId={dragging}
-              onDragOver={e => {
-                e.preventDefault()
-                if (dragOver !== status) setDragOver(status)
-              }}
-              onDragLeave={e => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            return (
+              <KanbanColumn
+                key={status}
+                status={status}
+                leads={leadsInStage}
+                stageTotal={stageTotal}
+                isTargetOver={isTargetOver}
+                draggingLeadId={dragging}
+                onDragOver={e => {
+                  e.preventDefault()
+                  if (dragOver !== status) setDragOver(status)
+                }}
+                onDragLeave={e => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setDragOver(null)
+                  }
+                }}
+                onDrop={e => handleDrop(e, status)}
+                onDragStartCard={(e, lead) => {
+                  e.dataTransfer.setData('leadId', lead.id)
+                  e.dataTransfer.setData('fromStatus', lead.status)
+                  setDragging(lead.id)
+                }}
+                onDragEndCard={() => {
+                  setDragging(null)
                   setDragOver(null)
-                }
-              }}
-              onDrop={e => handleDrop(e, status)}
-              onDragStartCard={(e, lead) => {
-                e.dataTransfer.setData('leadId', lead.id)
-                e.dataTransfer.setData('fromStatus', lead.status)
-                setDragging(lead.id)
-              }}
-              onDragEndCard={() => {
-                setDragging(null)
-                setDragOver(null)
-              }}
-              onMoveStage={handleMoveStageAccessible}
-            />
-          )
-        })}
-      </div>
+                }}
+                onMoveStage={handleMoveStageAccessible}
+              />
+            )
+          })}
+        </div>
+      ) : (
+        /* List / Table View with Stage Metrics */
+        <PipelineListView
+          leads={activeLeads}
+          stageSums={stageSums}
+          byStatus={byStatus}
+          onMoveStage={handleMoveStageAccessible}
+        />
+      )}
 
       {/* Close Lost Reason Modal */}
       <CloseLostModal

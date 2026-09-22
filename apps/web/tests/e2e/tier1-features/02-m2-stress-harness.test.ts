@@ -74,12 +74,12 @@ describe('M2 Stress Harness: Empirical Edge Cases & Failure Mode Analysis', () =
       const expandedHtml = renderToString(React.createElement(Sidebar, { isCollapsed: false }))
       expect(expandedHtml).toContain('w-64')
       expect(expandedHtml).not.toContain('w-12')
-      expect(expandedHtml).toContain('Thai Watsadu WDS')
+      expect(expandedHtml).toContain('Cusbox')
 
       const collapsedHtml = renderToString(React.createElement(Sidebar, { isCollapsed: true }))
       expect(collapsedHtml).toContain('w-12')
       expect(collapsedHtml).not.toContain('w-64')
-      expect(collapsedHtml).toContain('TW')
+      expect(collapsedHtml).toContain('CB')
     })
   })
 

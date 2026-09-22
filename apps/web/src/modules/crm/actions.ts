@@ -873,3 +873,77 @@ export async function logLeadActivityAction(
 // Alias for backwards compatibility
 export const addLeadActivityAction = logLeadActivityAction
 
+export interface CreateCustomerInput {
+  name: string
+  code?: string
+  taxId?: string
+  phone?: string
+  email?: string
+  contactPerson?: string
+  lineId?: string
+  customerGroup?: string
+  creditLimitSatang?: number
+  addressLine1?: string
+  province?: string
+  district?: string
+  subDistrict?: string
+  postalCode?: string
+  actorId?: string
+}
+
+export async function createCustomerAction(input: CreateCustomerInput): Promise<{
+  success: boolean
+  customer?: any
+  error?: string
+}> {
+  try {
+    if (!input.name || !input.name.trim()) {
+      return { success: false, error: 'กรุณาระบุชื่อลูกค้าหรือชื่อบริษัท' }
+    }
+
+    const db = getDb()
+    const customerCode = input.code?.trim() || `CUS-${Date.now().toString().slice(-6)}`
+
+    const { addresses } = await import('@wds/db')
+
+    const newCustomer = await withTransaction(db, async (tx) => {
+      const [c] = await tx.insert(customers).values({
+        code: customerCode,
+        name: input.name.trim(),
+        taxId: input.taxId?.trim() || null,
+        phone: input.phone?.trim() || null,
+        email: input.email?.trim() || null,
+        contactPerson: input.contactPerson?.trim() || null,
+        lineId: input.lineId?.trim() || null,
+        customerGroup: input.customerGroup || 'contractor',
+        creditLimitSatang: input.creditLimitSatang ?? 0,
+        creditUsedSatang: 0,
+        status: 'active',
+      }).returning()
+
+      if (input.addressLine1?.trim()) {
+        await tx.insert(addresses).values({
+          customerId: c.id,
+          label: 'สำนักงานใหญ่ / สถานที่หลัก',
+          addressLine1: input.addressLine1.trim(),
+          province: input.province?.trim() || null,
+          district: input.district?.trim() || null,
+          subDistrict: input.subDistrict?.trim() || null,
+          postalCode: input.postalCode?.trim() || null,
+          isDefault: true,
+        })
+      }
+
+      return c
+    })
+
+    revalidatePath('/wds/customers')
+    return { success: true, customer: newCustomer }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'เกิดข้อผิดพลาดในการสร้างลูกค้า',
+    }
+  }
+}
+

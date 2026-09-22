@@ -8,4 +8,8 @@ module.exports = {
   collectCoverageFrom: ['src/modules/**/*.(t|j)s'],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
+  moduleNameMapper: {
+    '^@wds/shared-types$': '<rootDir>/../../packages/shared-types/src/index.ts',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
 };

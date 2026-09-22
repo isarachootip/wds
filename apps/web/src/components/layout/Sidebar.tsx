@@ -22,6 +22,8 @@ import {
   ExternalLink,
   Layers,
   MessageSquare,
+  BookOpen,
+  ClipboardCheck,
 } from 'lucide-react'
 import { logout } from '@/app/(auth)/login/actions'
 import { useSidebar } from './AppShell'
@@ -115,6 +117,11 @@ export const navGroups: NavGroup[] = [
         icon: <Truck className="w-4 h-4 shrink-0" />,
       },
       {
+        title: 'ผลตรวจ QC (PMT Flow)',
+        href: '/wds/pmt-qc',
+        icon: <ClipboardCheck className="w-4 h-4 shrink-0 text-emerald-500" />,
+      },
+      {
         title: 'Field Service App',
         href: '/visit/dashboard',
         icon: <ExternalLink className="w-4 h-4 shrink-0 text-blue-500" />,
@@ -151,6 +158,11 @@ export const navGroups: NavGroup[] = [
     label: 'Governance & Settings',
     defaultOpen: false,
     items: [
+      {
+        title: 'คลังความรู้ & คู่มือ (KM Hub)',
+        href: '/wds/km',
+        icon: <BookOpen className="w-4 h-4 shrink-0 text-amber-500" />,
+      },
       {
         title: 'Audit Logs (Event Store)',
         href: '/wds/admin/events',
@@ -250,27 +262,24 @@ export function Sidebar({
           <div className="flex items-center justify-center h-14 border-b border-sidebar-border shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-600 text-white font-black text-sm shadow-xs shrink-0 cursor-default">
-                  TW
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-sm shadow-xs shrink-0 cursor-default">
+                  CB
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                <p className="font-semibold text-xs">Thai Watsadu WDS</p>
-                <p className="text-[10px] text-muted-foreground">v1.0 Enterprise</p>
+                <p className="font-semibold text-xs">Cusbox</p>
+                <p className="text-[10px] text-muted-foreground">v1.0</p>
               </TooltipContent>
             </Tooltip>
           </div>
         ) : (
           <div className="flex items-center gap-3 h-14 px-4 border-b border-sidebar-border shrink-0">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-600 text-white font-black text-sm shadow-xs shrink-0">
-              TW
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-sm shadow-xs shrink-0">
+              CB
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="font-semibold text-xs text-sidebar-foreground truncate tracking-tight">
-                Thai Watsadu WDS
-              </span>
-              <span className="text-[11px] text-muted-foreground truncate">
-                Wholesale &amp; Direct Sales
+              <span className="font-bold text-sm text-sidebar-foreground truncate tracking-tight">
+                Cusbox
               </span>
             </div>
             <span className="ml-auto px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 shrink-0">

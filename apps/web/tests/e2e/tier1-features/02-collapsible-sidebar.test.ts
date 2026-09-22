@@ -24,8 +24,8 @@ describe('Tier 1.2: Collapsible Sidebar State Machine', () => {
     )
 
     expect(html).toContain('w-64')
-    expect(html).toContain('Thai Watsadu WDS')
-    expect(html).toContain('TW')
+    expect(html).toContain('Cusbox')
+    expect(html).toContain('CB')
     expect(html).toContain('v1.0')
   })
 

@@ -44,6 +44,9 @@ const handlers: Record<string, EventHandler> = {
   'order.closed': async (payload) => {
     console.log('[event] order.closed', payload)
   },
+  'pmt.qc.passed': async (payload, eventId) => {
+    console.log(`[event] pmt.qc.passed (${eventId}):`, payload)
+  },
 }
 
 // ─── Process Batch ─────────────────────────────────────────────────────────────

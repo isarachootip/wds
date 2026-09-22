@@ -83,14 +83,20 @@ c:/atgv/wds/
 
 ---
 
-### Phase 1 — WDS Core: การรับ Lead, ติดตามงาน และขอสำรวจหน้างาน
-- **เป้าหมาย**: จัดการ Lead Intake หลายช่องทาง, ป้องกันข้อมูลซ้ำซ้อน, และการแปลง Lead เป็น Site Visit.
+### Phase 1 — WDS Core: การจัดการลูกค้า (Customer Master), ลีด (Leads) และกระดานการขาย (Sales Pipeline)
+- **เป้าหมาย**: จัดการโครงสร้าง CRM 3 ระดับ (Customer 1 : N Leads $\rightarrow$ Sales Pipeline), รับ Lead หลายช่องทาง, ป้องกันข้อมูลซ้ำซ้อน, และการแปลง Lead เป็น Site Visit.
+- **โครงสร้าง CRM 3 ระดับ (3-Tier CRM Structure)**:
+  1. **ลูกค้า (Customer Master - `/wds/customers`)**: ข้อมูลนิติบุคคล/คู่ค้าถาวร บันทึกเลขผู้เสียภาษี 13 หลัก, วงเงินสินเชื่อ (Credit Limit), เงื่อนไขชำระเงิน (Credit Term), ที่อยู่จัดส่งหลายไซต์งานพร้อม GPS, และมุมมองรอบด้าน Customer 360° Profile.
+  2. **ลีด (Leads / Opportunities - `/wds/leads`)**: โอกาสทางการขายแต่ละโปรเจกต์ (1 ลูกค้ามีได้หลาย Lead) บันทึกความต้องการสินค้า, ขอบเขตงาน, งบประมาณ, ช่องทางติดต่อ, ประวัติ Follow-up และการนัดหมายสำรวจหน้างาน.
+  3. **กระดานการขาย (Sales Pipeline - `/wds/pipeline`)**: กระดานขับเคลื่อนกระบวนการขาย 7 ขั้นตอน (ใหม่ ➜ ติดต่อแล้ว ➜ นัดสำรวจ ➜ เสนอราคา ➜ รออนุมัติ/ชำระ ➜ ชนะ/แพ้) รองรับการสลับมุมมอง **Card View (Kanban)** และ **List View (Table)**, คำนวณยอดเงินรวมแต่ละขั้นตอน (Stage Deal Totals), และติดตามคอขวด (Bottlenecks) แบบ Real-time.
 - **ผลงานสำคัญ**:
-  1. **Lead Intake Multi-Channel**: รองรับที่มา `line`, `phone`, `store`, `other` บันทึกใน `leads` และความสนใจใน `interest (jsonb)`.
-  2. **Deduplication Engine**: ตรวจสอบเบอร์โทรศัพท์และ LINE User ID ซ้ำซ้อน หากพบข้อมูลเดิมจะเชื่อมต่ออัตโนมัติหรือแจ้งเตือน.
-  3. **Follow-up Activities**: บันทึกการโทร, ส่งข้อความ, นัดหมายลงใน `lead_activities` และ `follow_ups` พร้อมระบบแจ้งเตือนวันครบกำหนด.
-  4. **Site Visit Request**: คำขอสำรวจหน้างานบันทึกพิกัด Latitude/Longitude และขอบเขตงาน (`scope jsonb`) เพื่อส่งต่อให้ Coordinator.
-  5. **Sales Territory Isolation**: เซลล์มองเห็นเฉพาะ Lead ที่ตนเองรับผิดชอบ (ยกเว้น Sales Manager และ Admin ที่เห็นทั้งทีม).
+  1. **Customer Master & 360° Hub**: ระบบบริหารลูกค้า B2B พร้อม Modal สร้างลูกค้าใหม่, ตรวจสอบเลข 13 หลัก, และคำนวณวงเงินสินเชื่อคงเหลืออัตโนมัติ.
+  2. **Sales Pipeline Switcher (Card / List View)**: กระดานขาย Kanban ปรับแต่งสี Cruip Design System ชัดเจน สลับเป็น List Table ได้ พร้อมการคำนวณมูลค่างานรวมแต่ละ Stage.
+  3. **Lead Intake Multi-Channel**: รองรับที่มา `line`, `phone`, `store`, `other` บันทึกใน `leads` และความสนใจใน `interest (jsonb)`.
+  4. **Deduplication Engine**: ตรวจสอบเบอร์โทรศัพท์และ LINE User ID ซ้ำซ้อน หากพบข้อมูลเดิมจะเชื่อมต่ออัตโนมัติหรือแจ้งเตือน.
+  5. **Follow-up Activities**: บันทึกการโทร, ส่งข้อความ, นัดหมายลงใน `lead_activities` และ `follow_ups` พร้อมระบบแจ้งเตือนวันครบกำหนด.
+  6. **Site Visit Request**: คำขอสำรวจหน้างานบันทึกพิกัด Latitude/Longitude และขอบเขตงาน (`scope jsonb`) เพื่อส่งต่อให้ Coordinator.
+  7. **Sales Territory Isolation**: เซลล์มองเห็นเฉพาะ Lead ที่ตนเองรับผิดชอบ (ยกเว้น Sales Manager และ Admin ที่เห็นทั้งทีม).
 
 ---
 

@@ -20,16 +20,16 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
+  defaultTheme = 'light',
   storageKey = 'wds-theme',
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(defaultTheme)
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
-  // Determine system preference
+  // Determine system preference (defaults to light for clean corporate UI)
   const getSystemTheme = useCallback((): 'light' | 'dark' => {
     if (typeof window === 'undefined') return 'light'
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    return 'light'
   }, [])
 
   // Apply theme class to document.documentElement
@@ -50,15 +50,18 @@ export function ThemeProvider({
     [getSystemTheme]
   )
 
-  // Initialize from localStorage on mount
+  // Initialize from localStorage on mount - default and reset to light
   useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey) as Theme | null
-      const initialTheme = stored && ['light', 'dark', 'system'].includes(stored) ? stored : defaultTheme
+      if (stored === 'dark') {
+        localStorage.setItem(storageKey, 'light')
+      }
+      const initialTheme: Theme = stored === 'dark' ? 'light' : (stored || 'light')
       setThemeState(initialTheme)
       applyTheme(initialTheme)
     } catch {
-      applyTheme(defaultTheme)
+      applyTheme('light')
     }
   }, [defaultTheme, storageKey, applyTheme])
 

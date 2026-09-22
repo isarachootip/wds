@@ -33,7 +33,7 @@ describe('M2 Empirical Challenger: Layout Metrics, DOM Contracts & Accessibility
       )
       expect(html).toContain('w-64')
       expect(html).not.toContain('w-12')
-      expect(html).toContain('Thai Watsadu WDS')
+      expect(html).toContain('Cusbox')
     })
 
     it('1.2: collapsed sidebar renders with w-12 class and compact brand icon', () => {
@@ -47,7 +47,7 @@ describe('M2 Empirical Challenger: Layout Metrics, DOM Contracts & Accessibility
       expect(html).toContain('w-12')
       expect(html).not.toContain('w-64')
       // Compact brand icon renders
-      expect(html).toContain('TW')
+      expect(html).toContain('CB')
     })
 
     it('1.3: off-canvas drawer is hidden (-translate-x-full) when mobileOpen is false', () => {
@@ -111,7 +111,7 @@ describe('M2 Empirical Challenger: Layout Metrics, DOM Contracts & Accessibility
     })
 
     it('2.3 (Adversarial Audit): navGroups configuration contract', () => {
-      const govGroup = navGroups.find((g) => g.label === 'Governance')
+      const govGroup = navGroups.find((g) => g.label.startsWith('Governance'))
       expect(govGroup).toBeDefined()
       expect(govGroup?.defaultOpen).toBe(false)
     })

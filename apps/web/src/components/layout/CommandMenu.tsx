@@ -17,6 +17,8 @@ import {
   ShieldCheck,
   CornerDownLeft,
   MessageSquare,
+  BookOpen,
+  Sparkles,
 } from 'lucide-react'
 
 export interface CommandItem {
@@ -172,6 +174,22 @@ export const defaultCommands: CommandItem[] = [
     href: '/wds/admin/settings',
     category: 'ระบบ & ความปลอดภัย',
     icon: <MessageSquare className="w-4 h-4 text-[#06C755]" />,
+  },
+  {
+    id: 'km-hub',
+    title: 'คลังความรู้และคู่มือระบบ (KM Hub)',
+    subtitle: 'ศูนย์รวมคู่มือการทำงาน กฎธุรกิจ และความรู้ระบบ WDS',
+    href: '/wds/km',
+    category: 'คู่มือ & ความรู้ (KM)',
+    icon: <BookOpen className="w-4 h-4 text-amber-500" />,
+  },
+  {
+    id: 'km-diff',
+    title: 'คู่มือ: ลูกค้า vs ลีด vs Sales Pipeline ต่างกันอย่างไร?',
+    subtitle: 'ทำความเข้าใจโครงสร้าง CRM 1 Customer : N Leads และ Pipeline 7 ขั้น',
+    href: '/wds/km?article=customer-lead-pipeline',
+    category: 'คู่มือ & ความรู้ (KM)',
+    icon: <Sparkles className="w-4 h-4 text-amber-500" />,
   },
 ]
 

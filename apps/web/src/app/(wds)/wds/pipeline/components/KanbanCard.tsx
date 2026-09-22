@@ -108,28 +108,28 @@ export function KanbanCard({
       <Link
         href={`/wds/leads/${lead.id}`}
         onClick={e => e.stopPropagation()}
-        className="block group-hover:text-primary transition-colors"
+        className="block group-hover:text-primary transition-colors mt-1"
       >
-        <p className="text-sm font-semibold text-foreground line-clamp-1 tracking-tight">
+        <p className="text-base font-bold text-foreground line-clamp-1 tracking-tight">
           {lead.customerName || '(ยังไม่ระบุชื่อลูกค้า)'}
         </p>
       </Link>
 
       {/* Project / Company Name */}
-      <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+      <p className="text-xs font-semibold text-muted-foreground line-clamp-1 mt-0.5">
         {projectDisplay}
       </p>
 
       {/* Material / Interest Snippet */}
       {interestText && (
-        <p className="text-xs text-muted-foreground line-clamp-1 mt-2 bg-muted/50 px-2.5 py-1 rounded-lg border border-border/50">
+        <p className="text-xs font-medium text-foreground/90 line-clamp-1 mt-2 bg-muted/60 px-2.5 py-1 rounded-lg border border-border">
           {interestText}
         </p>
       )}
 
       {/* Deal Value & Contact Row */}
       <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between gap-2">
-        <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-sm tabular-nums">
+        <div className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-base tabular-nums">
           ฿{satangToBaht(dealSatang)}
         </div>
 
@@ -137,29 +137,27 @@ export function KanbanCard({
           <a
             href={`tel:${lead.customerPhone}`}
             onClick={e => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors p-1 rounded-md hover:bg-muted"
+            className="inline-flex items-center gap-1.5 text-foreground hover:text-primary transition-colors p-1 rounded-md hover:bg-muted font-bold text-xs font-mono"
             title="โทรหาลูกค้า"
           >
-            <PhoneCall className="size-3 text-primary" />
-            <span className="font-mono text-[11px]">
-              {formatPhone(lead.customerPhone)}
-            </span>
+            <PhoneCall className="size-3.5 text-primary shrink-0" />
+            <span>{formatPhone(lead.customerPhone)}</span>
           </a>
         ) : lead.channelRef ? (
-          <span className="text-[11px] text-muted-foreground truncate max-w-[90px] font-mono">
+          <span className="text-xs font-bold text-muted-foreground truncate max-w-[90px] font-mono">
             {lead.channelRef}
           </span>
         ) : null}
       </div>
 
       {/* Footer Meta: AE Avatar, Next Date & Stage Selector */}
-      <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+      <div className="mt-2.5 flex items-center justify-between gap-2 text-xs text-muted-foreground">
         {/* AE Actor Avatar */}
         <div className="flex items-center gap-1.5 shrink-0" title={`ผู้ดูแล: ${aeName}`}>
           <div className="size-6 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold flex items-center justify-center shrink-0">
             {aeInitials}
           </div>
-          <span className="truncate max-w-[70px] text-[10px] font-medium hidden sm:inline">
+          <span className="truncate max-w-[80px] text-xs font-bold text-foreground hidden sm:inline">
             {aeName}
           </span>
         </div>
