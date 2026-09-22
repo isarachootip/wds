@@ -17,7 +17,6 @@ export async function GET(
   const { quotation, customer, items } = data
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const element = createElement(QuotationPdf, {
       number: quotation.number ?? 'DRAFT',
       customerName: customer?.name,
